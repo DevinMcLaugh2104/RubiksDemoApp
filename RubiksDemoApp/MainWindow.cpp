@@ -1,5 +1,6 @@
 ﻿#include "mainwindow.h"
-#include "CubeWindow.h"        
+#include "CubeWindow.h"
+#include "SettingsDialog.h"
 #include <QApplication>
 #include <QEvent>
 #include <QKeyEvent>
@@ -51,7 +52,7 @@ MainWindow::MainWindow(QWidget* parent)
     outerLayout->addWidget(m_scrambleLabel);
     outerLayout->addLayout(contentLayout);
 
-    // ——— Add the “Open Cube” button ——————————
+    // --- Add the “Open Cube” button ----------
     cubeButton = new QPushButton("Open Cube", this);
     outerLayout->addWidget(cubeButton);
     connect(cubeButton, &QPushButton::clicked,
@@ -63,6 +64,10 @@ MainWindow::MainWindow(QWidget* parent)
     // live‐update hookup
     m_update->setInterval(50);
     connect(m_update, &QTimer::timeout, this, &MainWindow::onUpdateTimer);
+    // --- Add the "Settings" button -----------
+    settingsButton = new QPushButton("Settings", this);
+    outerLayout->addWidget(settingsButton);
+    connect(settingsButton, &QPushButton::clicked, this, &MainWindow::openSettingsDialog);
 }
 
 MainWindow::~MainWindow() = default;
@@ -99,7 +104,7 @@ bool MainWindow::eventFilter(QObject*, QEvent* event)
         {
             if (!m_running)
             {
-                if (m_holdActive && m_holdTimer.elapsed() >= 1000)
+                if (m_holdActive && m_holdTimer.elapsed() >= m_timerValue)
                 {
                     m_elapsed.restart();
                     m_update->start();
@@ -174,4 +179,10 @@ void MainWindow::onShowCube()
     CubeWindow* cw = new CubeWindow(this);
     cw->setAttribute(Qt::WA_DeleteOnClose);
     cw->show();
+}
+void MainWindow::openSettingsDialog() {
+    SettingsDialog dialog(m_timerValue, this);  
+    if (dialog.exec() == QDialog::Accepted) {
+        m_timerValue = dialog.getBufferTime();  
+    }
 }

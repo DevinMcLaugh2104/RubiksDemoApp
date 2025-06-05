@@ -23,6 +23,7 @@ protected:
 private slots:
     void onUpdateTimer();
     void onShowCube();
+    void openSettingsDialog();
 
 private:
     QString generateScramble(int length);
@@ -35,6 +36,8 @@ private:
     // hold-to-start logic
     QElapsedTimer   m_holdTimer;
     bool            m_holdActive;
+    int             m_timerValue = 1000;
+
 
     // UI
     QLabel* m_scrambleLabel;
@@ -42,6 +45,8 @@ private:
     QTableWidget* m_table;
 
     QPushButton* cubeButton;
+    QPushButton* settingsButton;
+
 };
 
 #endif // MAINWINDOW_H

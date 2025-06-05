@@ -17,6 +17,7 @@
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="CubeWindow.cpp" />
     <ClCompile Include="PLLCases.cpp" />
+    <ClCompile Include="SettingsDialog.cpp" />
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="MainWindow.h" />
@@ -30,6 +31,7 @@
   <ItemGroup>
     <ClInclude Include="CubeCore.h" />
     <ClInclude Include="PLLCases.h" />
+    <ClInclude Include="SettingsDialog.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{FD846F19-78C6-4095-AEB5-115768BC246C}</ProjectGuid>
