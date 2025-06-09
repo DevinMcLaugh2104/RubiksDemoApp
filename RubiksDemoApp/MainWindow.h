@@ -7,8 +7,8 @@
 #include <QLabel>
 #include <QTableWidget>
 #include <QPushButton>
-
-// How did i lose this header file from the list?
+#include <QColor>
+#include <QColorDialog>
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -46,6 +46,8 @@ private:
 
     QPushButton* cubeButton;
     QPushButton* settingsButton;
+
+    QColor m_backgroundColor = QColor(Qt::white);
 
 };
 

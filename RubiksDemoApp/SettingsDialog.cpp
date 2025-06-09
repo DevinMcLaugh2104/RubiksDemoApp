@@ -4,7 +4,7 @@
 #include <QLabel>
 #include <qcolordialog.h>
 
-SettingsDialog::SettingsDialog(int currentBufferTime, QWidget* parent)
+SettingsDialog::SettingsDialog(int currentBufferTime, QColor color, QWidget* parent)
     : QDialog(parent)
 {
     setWindowTitle("Settings");
