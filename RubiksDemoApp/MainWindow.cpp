@@ -32,6 +32,7 @@ MainWindow::MainWindow(QWidget* parent)
     auto* timerLayout = new QVBoxLayout;
     timerLayout->addWidget(m_label);
     timerLayout->addStretch();
+    timerBox->setStyleSheet("QGroupBox { background-color: lightgray; }");
     timerBox->setLayout(timerLayout);
 
     // results table
@@ -64,10 +65,14 @@ MainWindow::MainWindow(QWidget* parent)
     // live‐update hookup
     m_update->setInterval(50);
     connect(m_update, &QTimer::timeout, this, &MainWindow::onUpdateTimer);
+
     // --- Add the "Settings" button -----------
     settingsButton = new QPushButton("Settings", this);
     outerLayout->addWidget(settingsButton);
     connect(settingsButton, &QPushButton::clicked, this, &MainWindow::openSettingsDialog);
+
+    // --- Add the "Color" button ----------
+
 }
 
 MainWindow::~MainWindow() = default;
@@ -181,8 +186,16 @@ void MainWindow::onShowCube()
     cw->show();
 }
 void MainWindow::openSettingsDialog() {
-    SettingsDialog dialog(m_timerValue, this);  
+    SettingsDialog dialog(m_timerValue, m_backgroundColor, this);
     if (dialog.exec() == QDialog::Accepted) {
-        m_timerValue = dialog.getBufferTime();  
+        m_timerValue = dialog.getBufferTime();
+        m_backgroundColor = dialog.getSelectedColor();
+
+        QPalette pal = this->palette();
+        pal.setColor(QPalette::Window, m_backgroundColor);
+        this->setAutoFillBackground(true);
+        this->setPalette(pal);
+        this->update();  
     }
 }
+
