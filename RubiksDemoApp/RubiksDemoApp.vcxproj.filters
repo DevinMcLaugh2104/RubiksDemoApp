@@ -44,6 +44,9 @@
     <ClCompile Include="SettingsDialog.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="LoginDialog.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="MainWindow.h">
@@ -53,6 +56,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="CubeWindow.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="LoginDialog.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

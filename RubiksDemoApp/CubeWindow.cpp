@@ -3,8 +3,7 @@
 #include <QVBoxLayout>
 
 CubeWindow::CubeWindow(QWidget* parent)
-    : QMainWindow(parent)
-    , glWidget(new CubeGLWidget(this))
+    : QMainWindow(parent), glWidget(new CubeGLWidget(this))
 {
     auto* container = new QWidget(this);
     auto* layout = new QVBoxLayout(container);
