@@ -27,7 +27,6 @@ const Cubie& CubeCore::getCubie(int x, int y, int z) const {
 }
 
 void CubeCore::rotateLayer(char axis, int index, bool clockwise) {
-    // Simplified rotation: rotates transforms only
     QMatrix4x4 rotation;
     float angle = clockwise ? 90.0f : -90.0f;
     if (axis == 'x') rotation.rotate(angle, 1, 0, 0);
