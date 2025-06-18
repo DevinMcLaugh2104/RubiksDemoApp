@@ -2,12 +2,12 @@
 #include <algorithm>
 
 // Sticker colors
-static const QVector3D WHITE{ 1, 1,   1 };
-static const QVector3D YELLOW{ 1, 1,   0 };
+static const QVector3D WHITE{ 1, 1, 1 };
+static const QVector3D YELLOW{ 1, 1, 0 };
 static const QVector3D ORANGE{ 1, 0.5, 0 };
-static const QVector3D RED{ 1, 0,   0 };
-static const QVector3D GREEN{ 0, 1,   0 };
-static const QVector3D BLUE{ 0, 0,   1 };
+static const QVector3D RED{ 1, 0, 0 };
+static const QVector3D GREEN{ 0, 1, 0 };
+static const QVector3D BLUE{ 0, 0, 1 };
 static const QVector3D DARK{ 0.05, 0.05, 0.05 };
 
 RubiksCube::RubiksCube() {
@@ -29,53 +29,67 @@ RubiksCube::RubiksCube() {
             }
 }
 
-void RubiksCube::rotateLayer(char axis, int index, bool cw) {
-    Cubie tmp[SIZE][SIZE];
+RubiksCube::AxisInfo RubiksCube::mapWorldDirToAxis(const QVector3D& worldDir) const {
+    QVector3D local = m_orientation.inverted().mapVector(worldDir);
+    float ax = std::fabs(local.x()), ay = std::fabs(local.y()), az = std::fabs(local.z());
 
-    auto map = [cw](int a, int b) {
-        return cw ? std::make_pair(SIZE - 1 - b, a)
-            : std::make_pair(b, SIZE - 1 - a);
+    AxisInfo out{};
+    if (ax >= ay && ax >= az) {
+        out.axis = 'X';
+        out.positive = local.x() > 0;
+    }
+    else if (ay >= ax && ay >= az) {
+        out.axis = 'Y';
+        out.positive = local.y() > 0;
+    }
+    else {
+        out.axis = 'Z';
+        out.positive = local.z() > 0;
+    }
+    return out;
+}
+
+void RubiksCube::rotateLayer(char axis, int index, bool clockwise) {
+    std::array<std::array<std::array<Cubie, SIZE>, SIZE>, SIZE> original = cube;
+
+    auto rotate90 = [&](QMatrix4x4& mat, const QVector3D& axisVec) {
+        QMatrix4x4 rot;
+        rot.rotate(clockwise ? 90 : -90, axisVec);
+        mat = rot * mat;
         };
 
-    if (axis == 'X') {
-        for (int y = 0; y < SIZE; ++y)
-            for (int z = 0; z < SIZE; ++z)
-                tmp[y][z] = cube[index][y][z];
-
+    for (int x = 0; x < SIZE; ++x)
         for (int y = 0; y < SIZE; ++y)
             for (int z = 0; z < SIZE; ++z) {
-                auto [ny, nz] = map(y, z);
-                cube[index][ny][nz] = tmp[y][z];
-                cube[index][ny][nz].transform.rotate(cw ? 90.f : -90.f, 1, 0, 0);
-                rotateFacesX(cube[index][ny][nz], cw);
-            }
-    }
-    else if (axis == 'Y') {
-        for (int x = 0; x < SIZE; ++x)
-            for (int z = 0; z < SIZE; ++z)
-                tmp[x][z] = cube[x][index][z];
+                if ((axis == 'X' && x == index) ||
+                    (axis == 'Y' && y == index) ||
+                    (axis == 'Z' && z == index)) {
 
-        for (int x = 0; x < SIZE; ++x)
-            for (int z = 0; z < SIZE; ++z) {
-                auto [nx, nz] = map(x, z);
-                cube[nx][index][nz] = tmp[x][z];
-                cube[nx][index][nz].transform.rotate(cw ? 90.f : -90.f, 0, 1, 0);
-                rotateFacesY(cube[nx][index][nz], cw);
-            }
-    }
-    else if (axis == 'Z') {
-        for (int x = 0; x < SIZE; ++x)
-            for (int y = 0; y < SIZE; ++y)
-                tmp[x][y] = cube[x][y][index];
+                    int nx = x, ny = y, nz = z;
+                    if (axis == 'X') {
+                        ny = clockwise ? SIZE - 1 - z : z;
+                        nz = clockwise ? y : SIZE - 1 - y;
+                    }
+                    else if (axis == 'Y') {
+                        nx = clockwise ? z : SIZE - 1 - z;
+                        nz = clockwise ? SIZE - 1 - x : x;
+                    }
+                    else if (axis == 'Z') {
+                        nx = clockwise ? SIZE - 1 - y : y;
+                        ny = clockwise ? x : SIZE - 1 - x;
+                    }
 
-        for (int x = 0; x < SIZE; ++x)
-            for (int y = 0; y < SIZE; ++y) {
-                auto [nx, ny] = map(x, y);
-                cube[nx][ny][index] = tmp[x][y];
-                cube[nx][ny][index].transform.rotate(cw ? 90.f : -90.f, 0, 0, 1);
-                rotateFacesZ(cube[nx][ny][index], cw);
+                    cube[nx][ny][nz] = original[x][y][z];
+                    rotate90(cube[nx][ny][nz].transform,
+                        axis == 'X' ? QVector3D(1, 0, 0) :
+                        axis == 'Y' ? QVector3D(0, 1, 0) :
+                        QVector3D(0, 0, 1));
+
+                    if (axis == 'X') rotateFacesX(cube[nx][ny][nz], clockwise);
+                    if (axis == 'Y') rotateFacesY(cube[nx][ny][nz], clockwise);
+                    if (axis == 'Z') rotateFacesZ(cube[nx][ny][nz], clockwise);
+                }
             }
-    }
 }
 
 void RubiksCube::rotateFacesX(Cubie& c, bool cw) {
@@ -118,5 +132,98 @@ void RubiksCube::rotateFacesZ(Cubie& c, bool cw) {
         std::swap(f[RIGHT], f[DOWN]);
         std::swap(f[DOWN], f[LEFT]);
     }
+}
+
+// Move logic (top-relative)
+void RubiksCube::U() {
+    AxisInfo up = mapWorldDirToAxis(QVector3D(0, 1, 0));
+    int layer = up.positive ? 2 : 0;
+    bool clockwise = !up.positive;
+    rotateLayer(up.axis, layer, clockwise);
+}
+
+void RubiksCube::Up() {
+    AxisInfo up = mapWorldDirToAxis(QVector3D(0, 1, 0));
+    int layer = up.positive ? 2 : 0;
+    bool clockwise = up.positive;
+    rotateLayer(up.axis, layer, clockwise);
+}
+
+void RubiksCube::D() {
+    AxisInfo up = mapWorldDirToAxis(QVector3D(0, 1, 0));
+    int layer = up.positive ? 0 : 2;
+    bool clockwise = up.positive;
+    rotateLayer(up.axis, layer, clockwise);
+}
+
+void RubiksCube::Dp() {
+    AxisInfo up = mapWorldDirToAxis(QVector3D(0, 1, 0));
+    int layer = up.positive ? 0 : 2;
+    bool clockwise = !up.positive;
+    rotateLayer(up.axis, layer, clockwise);
+}
+
+void RubiksCube::R() {
+    AxisInfo up = mapWorldDirToAxis(QVector3D(0, 1, 0));
+    AxisInfo right = mapWorldDirToAxis(QVector3D(1, 0, 0));
+    int layer = right.positive ? 2 : 0;
+    bool clockwise = (up.positive ^ right.positive);
+    rotateLayer(right.axis, layer, clockwise);
+}
+
+void RubiksCube::Rp() {
+    AxisInfo up = mapWorldDirToAxis(QVector3D(0, 1, 0));
+    AxisInfo right = mapWorldDirToAxis(QVector3D(1, 0, 0));
+    int layer = right.positive ? 2 : 0;
+    bool clockwise = !(up.positive ^ right.positive);
+    rotateLayer(right.axis, layer, clockwise);
+}
+
+void RubiksCube::L() {
+    AxisInfo up = mapWorldDirToAxis(QVector3D(0, 1, 0));
+    AxisInfo right = mapWorldDirToAxis(QVector3D(1, 0, 0));
+    int layer = right.positive ? 0 : 2;
+    bool clockwise = !(up.positive ^ right.positive);
+    rotateLayer(right.axis, layer, clockwise);
+}
+
+void RubiksCube::Lp() {
+    AxisInfo up = mapWorldDirToAxis(QVector3D(0, 1, 0));
+    AxisInfo right = mapWorldDirToAxis(QVector3D(1, 0, 0));
+    int layer = right.positive ? 0 : 2;
+    bool clockwise = (up.positive ^ right.positive);
+    rotateLayer(right.axis, layer, clockwise);
+}
+
+void RubiksCube::F() {
+    AxisInfo up = mapWorldDirToAxis(QVector3D(0, 1, 0));
+    AxisInfo front = mapWorldDirToAxis(QVector3D(0, 0, 1)); 
+    int layer = front.positive ? 2 : 0;
+    bool clockwise = (up.positive ^ front.positive);
+    rotateLayer(front.axis, layer, clockwise);
+}
+
+void RubiksCube::Fp() {
+    AxisInfo up = mapWorldDirToAxis(QVector3D(0, 1, 0));
+    AxisInfo front = mapWorldDirToAxis(QVector3D(0, 0, 1)); 
+    int layer = front.positive ? 2 : 0;
+    bool clockwise = !(up.positive ^ front.positive);
+    rotateLayer(front.axis, layer, clockwise);
+}
+
+void RubiksCube::B() {
+    AxisInfo up = mapWorldDirToAxis(QVector3D(0, 1, 0));
+    AxisInfo front = mapWorldDirToAxis(QVector3D(0, 0, 1)); 
+    int layer = front.positive ? 0 : 2;
+    bool clockwise = !(up.positive ^ front.positive);
+    rotateLayer(front.axis, layer, clockwise);
+}
+
+void RubiksCube::Bp() {
+    AxisInfo up = mapWorldDirToAxis(QVector3D(0, 1, 0));
+    AxisInfo front = mapWorldDirToAxis(QVector3D(0, 0, 1)); 
+    int layer = front.positive ? 0 : 2;
+    bool clockwise = (up.positive ^ front.positive);
+    rotateLayer(front.axis, layer, clockwise);
 }
 

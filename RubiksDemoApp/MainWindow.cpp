@@ -1,41 +1,41 @@
 ﻿#include "mainwindow.h"
 #include "CubeWindow.h"
+#include "CubeGLWidget.h"
 #include "SettingsDialog.h"
+
 #include <QApplication>
 #include <QEvent>
 #include <QKeyEvent>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
+#include <QGridLayout>
 #include <QGroupBox>
 #include <QHeaderView>
 #include <QTableWidgetItem>
 #include <QRandomGenerator>
-#include <QPushButton>          
+#include <QPushButton>
+#include <QLabel>
 
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent), m_update(new QTimer(this)), m_running(false), m_holdActive(false)
 {
-    // catch all key events
     qApp->installEventFilter(this);
 
-    // scramble label
+    // ───── UI top (timer, scramble, table) ──────────────────────────────
     m_scrambleLabel = new QLabel(this);
     m_scrambleLabel->setAlignment(Qt::AlignCenter);
     m_scrambleLabel->setWordWrap(true);
     m_scrambleLabel->setText(generateScramble(20));
-    m_scrambleLabel->setSizeIncrement(200, 200);
 
-    // timer display
     m_label = new QLabel("Hold Space ≥1 s, then release to start", this);
     m_label->setAlignment(Qt::AlignCenter);
-    auto* timerBox = new QGroupBox("Timer", this);
-    auto* timerLayout = new QVBoxLayout;
-    timerLayout->addWidget(m_label);
-    timerLayout->addStretch();
-    timerBox->setStyleSheet("QGroupBox { background-color: lightgray; }");
-    timerBox->setLayout(timerLayout);
 
-    // results table
+    auto* timerBox = new QGroupBox("Timer", this);
+    auto* timerLay = new QVBoxLayout(timerBox);
+    timerLay->addWidget(m_label);
+    timerLay->addStretch();
+    timerBox->setStyleSheet("QGroupBox{background:lightgray;}");
+
     m_table = new QTableWidget(this);
     m_table->setColumnCount(2);
     m_table->setHorizontalHeaderLabels({ "#", "Time (s)" });
@@ -44,53 +44,38 @@ MainWindow::MainWindow(QWidget* parent)
     m_table->setEditTriggers(QAbstractItemView::NoEditTriggers);
     m_table->setSelectionMode(QAbstractItemView::NoSelection);
 
-    // overall layout
     auto* central = new QWidget(this);
-    auto* outerLayout = new QVBoxLayout;
-    auto* contentLayout = new QHBoxLayout;
-    contentLayout->addWidget(timerBox, 0);
-    contentLayout->addWidget(m_table, 1);
+    auto* outerLayout = new QVBoxLayout(central);
+    auto* contentLay = new QHBoxLayout;
+    contentLay->addWidget(timerBox, 0);
+    contentLay->addWidget(m_table, 1);
+
     outerLayout->addWidget(m_scrambleLabel);
-    outerLayout->addLayout(contentLayout);
+    outerLayout->addLayout(contentLay);
 
-    // --- Add the “Open Cube” button ----------
+    // main-window buttons
     cubeButton = new QPushButton("Open Cube", this);
-    outerLayout->addWidget(cubeButton);
-    connect(cubeButton, &QPushButton::clicked,
-        this, &MainWindow::onShowCube);
-
-    central->setLayout(outerLayout);
-    setCentralWidget(central);
-
-    // live‐update hookup
-    m_update->setInterval(50);
-    connect(m_update, &QTimer::timeout, this, &MainWindow::onUpdateTimer);
-
-    // --- Add the "Settings" button -----------
     settingsButton = new QPushButton("Settings", this);
+    outerLayout->addWidget(cubeButton);
     outerLayout->addWidget(settingsButton);
+
+    connect(cubeButton, &QPushButton::clicked, this, &MainWindow::onShowCube);
     connect(settingsButton, &QPushButton::clicked, this, &MainWindow::openSettingsDialog);
 
-    // --- Add the "Color" button ----------
+    setCentralWidget(central);
 
+    // timer update
+    m_update->setInterval(50);
+    connect(m_update, &QTimer::timeout, this, &MainWindow::onUpdateTimer);
 }
 
 MainWindow::~MainWindow() = default;
 
-void MainWindow::onUpdateTimer()
+bool MainWindow::eventFilter(QObject* obj, QEvent* event)
 {
-    double secs = m_elapsed.elapsed() / 1000.0;
-    m_label->setText(QString::asprintf("%.3f s", secs));
-}
-
-bool MainWindow::eventFilter(QObject*, QEvent* event)
-{
-    // only handle non-auto-repeat Space
     if ((event->type() == QEvent::KeyPress || event->type() == QEvent::KeyRelease) &&
         static_cast<QKeyEvent*>(event)->isAutoRepeat())
-    {
         return false;
-    }
 
     if (event->type() == QEvent::KeyPress)
     {
@@ -143,7 +128,121 @@ bool MainWindow::eventFilter(QObject*, QEvent* event)
         }
     }
 
-    return QMainWindow::eventFilter(qApp, event);
+    return QMainWindow::eventFilter(obj, event);
+}
+
+// ───── Orientation helper ───────────────────────────────────────────────
+// Returns which original cube axis currently points “up” ( +Y in world )
+enum Axis { AxPosX, AxNegX, AxPosY, AxNegY, AxPosZ, AxNegZ };
+
+static Axis detectTopAxis(float xDeg, float yDeg)
+{
+    // build same rotation as view (X then Y), invert to map cube→world
+    QMatrix4x4 R;
+    R.rotate(xDeg, 1, 0, 0);
+    R.rotate(yDeg, 0, 1, 0);
+    QMatrix4x4 inv = R.inverted();
+
+    struct Test { QVector3D v; Axis a; };
+    std::array<Test, 6> axes{ {
+        {{ 1, 0, 0}, AxPosX}, {{-1, 0, 0}, AxNegX},
+        {{ 0, 1, 0}, AxPosY}, {{ 0,-1, 0}, AxNegY},
+        {{ 0, 0, 1}, AxPosZ}, {{ 0, 0,-1}, AxNegZ}
+    } };
+
+    Axis bestA = AxPosY;
+    float best = -2;                  // min dot=-1
+    for (auto& t : axes) {
+        float d = QVector3D::dotProduct(inv.map(t.v), QVector3D(0, 1, 0));
+        if (d > best) {
+            best = d;
+            bestA = t.a;
+        }
+    }
+    return bestA;
+}
+
+// ───── show CubeWindow with grid-layout buttons ─────────────────────────
+void MainWindow::onShowCube()
+{
+    auto* cw = new CubeWindow(this);
+    cw->setAttribute(Qt::WA_DeleteOnClose);
+
+    // central widget & layouts
+    auto* cWidget = new QWidget(cw);
+    auto* rootLay = new QVBoxLayout(cWidget);
+    auto* btnGrid = new QGridLayout;
+    auto* cubeW = new CubeGLWidget(cWidget);
+
+    // helper to map “U” press based on orientation
+    auto doUPressed = [cubeW, this] {
+        Axis top = detectTopAxis(cubeW->xRotation(), cubeW->yRotation());
+        switch (top) {
+        case AxPosY: cubeW->moveUpLayer();               break;         // white on top
+        case AxNegY: cubeW->moveDownLayerPrime();        break;         // yellow on top
+        case AxPosZ: cubeW->moveFrontLayer();            break;         // green on top
+        case AxNegZ: cubeW->moveBackLayerPrime();        break;         // blue on top
+        case AxPosX: cubeW->moveRightLayerPrime();       break;         // red on top
+        case AxNegX: cubeW->moveLeftLayer();             break;         // orange on top
+        }
+        cubeW->update();
+        };
+
+    auto doUpPressed = [cubeW, this] {
+        Axis top = detectTopAxis(cubeW->xRotation(), cubeW->yRotation());
+        switch (top) {
+        case AxPosY: cubeW->moveUpLayer();               break;         // white on top
+        case AxNegY: cubeW->moveDownLayerPrime();        break;         // yellow on top
+        case AxPosZ: cubeW->moveFrontLayer();            break;         // green on top
+        case AxNegZ: cubeW->moveBackLayerPrime();        break;         // blue on top
+        case AxPosX: cubeW->moveRightLayerPrime();       break;         // red on top
+        case AxNegX: cubeW->moveLeftLayer();             break;         // orange on top
+        }
+        cubeW->update();
+        };
+
+    // addButton utility
+    auto addBtn = [&](const QString& text, const std::function<void()>& fn, int r, int c) {
+        auto* b = new QPushButton(text, cWidget);
+        btnGrid->addWidget(b, r, c);
+        connect(b, &QPushButton::clicked, fn);
+        };
+
+    // U / U'
+    addBtn("U", [cubeW] { cubeW->moveUpLayer(); cubeW->update(); }, 0, 0);
+    addBtn("U'", [cubeW] { cubeW->moveUpLayerPrime(); cubeW->update(); }, 0, 1);
+    addBtn("R", [cubeW] { cubeW->moveRightLayer();  cubeW->update(); }, 1, 0);
+    addBtn("R'", [cubeW] { cubeW->moveRightLayerPrime(); cubeW->update(); }, 1, 1);
+    addBtn("F", [cubeW] { cubeW->moveFrontLayer();  cubeW->update(); }, 2, 0);
+    addBtn("F'", [cubeW] { cubeW->moveFrontLayerPrime(); cubeW->update(); }, 2, 1);
+    addBtn("D", [cubeW] { cubeW->moveDownLayer();  cubeW->update(); }, 3, 0);
+    addBtn("D'", [cubeW] { cubeW->moveDownLayerPrime(); cubeW->update(); }, 3, 1);
+    addBtn("L", [cubeW] { cubeW->moveLeftLayer();  cubeW->update(); }, 4, 0);
+    addBtn("L'", [cubeW] { cubeW->moveLeftLayerPrime(); cubeW->update(); }, 4, 1);
+    addBtn("B", [cubeW] { cubeW->moveBackLayer();  cubeW->update(); }, 5, 0);
+    addBtn("B'", [cubeW] { cubeW->moveBackLayerPrime(); cubeW->update(); }, 5, 1);
+
+    rootLay->addWidget(cubeW, 1);
+    rootLay->addLayout(btnGrid);
+    cw->setCentralWidget(cWidget);
+    cw->resize(900, 650);
+    cw->show();
+}
+
+void MainWindow::openSettingsDialog()
+{
+    SettingsDialog dialog(m_timerValue, m_backgroundColor, this);
+    if (dialog.exec() == QDialog::Accepted)
+    {
+        m_timerValue = dialog.getBufferTime();
+        m_backgroundColor = dialog.getSelectedColor();
+
+        QPalette pal = this->palette();
+        pal.setColor(QPalette::Window, m_backgroundColor);
+        this->setAutoFillBackground(true);
+        this->setPalette(pal);
+        this->update();
+    }
 }
 
 QString MainWindow::generateScramble(int length)
@@ -179,23 +278,8 @@ QString MainWindow::generateScramble(int length)
     return scr.join(' ');
 }
 
-void MainWindow::onShowCube()
+void MainWindow::onUpdateTimer()
 {
-    CubeWindow* cw = new CubeWindow(this);
-    cw->setAttribute(Qt::WA_DeleteOnClose);
-    cw->show();
+    double secs = m_elapsed.elapsed() / 1000.0;
+    m_label->setText(QString::asprintf("%.3f s", secs));
 }
-void MainWindow::openSettingsDialog() {
-    SettingsDialog dialog(m_timerValue, m_backgroundColor, this);
-    if (dialog.exec() == QDialog::Accepted) {
-        m_timerValue = dialog.getBufferTime();
-        m_backgroundColor = dialog.getSelectedColor();
-
-        QPalette pal = this->palette();
-        pal.setColor(QPalette::Window, m_backgroundColor);
-        this->setAutoFillBackground(true);
-        this->setPalette(pal);
-        this->update();  
-    }
-}
-

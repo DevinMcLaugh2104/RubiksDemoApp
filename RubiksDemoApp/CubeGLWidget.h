@@ -6,15 +6,35 @@
 #include <QOpenGLShaderProgram>
 #include <QMatrix4x4>
 #include <QMouseEvent>
-#include "RubiksCube.h"            // <<< NEW
+#include "RubiksCube.h"           
 
 class CubeGLWidget : public QOpenGLWidget,
     protected QOpenGLFunctions_3_3_Core
 {
     Q_OBJECT
+
 public:
     explicit CubeGLWidget(QWidget* parent = nullptr);
     ~CubeGLWidget() override;
+
+public slots:
+    void moveUpLayer();
+    void moveUpLayerPrime();
+    void moveRightLayer();
+    void moveRightLayerPrime();
+    void moveFrontLayer();
+    void moveFrontLayerPrime();
+    void moveDownLayer();
+    void moveDownLayerPrime();
+    void moveLeftLayer();
+    void moveLeftLayerPrime();
+    void moveBackLayer();
+    void moveBackLayerPrime();
+
+    void syncCubeOrientation();
+
+    float xRotation() const { return m_xRot; }
+    float yRotation() const { return m_yRot; }
 
 protected:
     void initializeGL() override;

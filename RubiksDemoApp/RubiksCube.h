@@ -3,43 +3,49 @@
 #include <QMatrix4x4>
 #include <QVector3D>
 #include <array>
+#include <cmath>
 
 class RubiksCube {
 public:
     static constexpr int SIZE = 3;
-    static constexpr float GAP = 1.02f;
+    static constexpr float GAP = 1.02f;          // distance between cubie centres
 
     enum Face { UP = 0, DOWN, LEFT, RIGHT, FRONT, BACK };
 
     struct Cubie {
-        QMatrix4x4 transform;
-        std::array<QVector3D, 6> faceColors; // indexed by Face
-        QVector3D index; // logical (x,y,z) position
+        QMatrix4x4                transform;      // local model matrix
+        std::array<QVector3D, 6>  faceColors;     // indexed by Face
+        QVector3D                 index;          // logical (x,y,z) position
     };
 
     RubiksCube();
 
+    // ?? orientation ???????????????????????????????????????????????????????????
+    /// Call every time the whole cube changes orientation (mouse drag, etc.).
+    void setOrientation(const QMatrix4x4& cubeToWorld) { m_orientation = cubeToWorld; }
+
+    // ?? high-level moves, always relative to the *current* top face ???????????
+    void R();  void Rp();
+    void L();  void Lp();
+    void U();  void Up();
+    void D();  void Dp();
+    void F();  void Fp();
+    void B();  void Bp();
+
+    // ?? low-level helpers (fixed global axes) – still useful internally ???????
+    void rotateLayer(char axis, int index, bool clockwise);
+
+    // ?? read access to individual cubies (for drawing) ????????????????????????
     const Cubie& getCubie(int x, int y, int z) const { return cube[x][y][z]; }
     Cubie& accessCubie(int x, int y, int z) { return cube[x][y][z]; }
 
-    void rotateLayer(char axis, int index, bool clockwise);
-
-    // Moves
-    void R() { rotateLayer('X', 2, true); }
-    void Rp() { rotateLayer('X', 2, false); }
-    void L() { rotateLayer('X', 0, false); }
-    void Lp() { rotateLayer('X', 0, true); }
-    void U() { rotateLayer('Y', 2, true); }
-    void Up() { rotateLayer('Y', 2, false); }
-    void D() { rotateLayer('Y', 0, false); }
-    void Dp() { rotateLayer('Y', 0, true); }
-    void F() { rotateLayer('Z', 2, true); }
-    void Fp() { rotateLayer('Z', 2, false); }
-    void B() { rotateLayer('Z', 0, false); }
-    void Bp() { rotateLayer('Z', 0, true); }
-
 private:
-    Cubie cube[SIZE][SIZE][SIZE];
+    // Helper that maps a world-space direction to this cube’s local axis (+/-)
+    struct AxisInfo { char axis; bool positive; };
+    AxisInfo mapWorldDirToAxis(const QVector3D& worldDir) const;
+
+    std::array<std::array<std::array<Cubie, SIZE>, SIZE>, SIZE> cube;
+    QMatrix4x4 m_orientation{ QMatrix4x4() };    // cube ? world
 
     static void rotateFacesX(Cubie& c, bool cw);
     static void rotateFacesY(Cubie& c, bool cw);

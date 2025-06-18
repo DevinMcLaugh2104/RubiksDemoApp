@@ -141,15 +141,18 @@ void CubeGLWidget::paintGL()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    // camera
     m_view.setToIdentity();
     m_view.translate(0, 0, -10);
     m_view.rotate(m_xRot, 1, 0, 0);
     m_view.rotate(m_yRot, 0, 1, 0);
 
-    // store for picking
     m_pickProj = m_proj;
     m_pickView = m_view;
+
+    QMatrix4x4 model;
+    model.rotate(m_xRot, 1, 0, 0);
+    model.rotate(m_yRot, 0, 1, 0);
+    m_cube.setOrientation(model);  // Keep orientation up to date here too
 
     m_prog.bind();
     m_prog.setUniformValue("view", m_view);
@@ -211,3 +214,24 @@ bool CubeGLWidget::intersectsCube(const QVector3D& O, const QVector3D& D)
     }
     return true;
 }
+
+void CubeGLWidget::syncCubeOrientation()
+{
+    QMatrix4x4 model;
+    model.rotate(m_xRot, 1, 0, 0);
+    model.rotate(m_yRot, 0, 1, 0);
+    m_cube.setOrientation(model);
+}
+
+void CubeGLWidget::moveUpLayer() { syncCubeOrientation(); m_cube.U();  update(); }
+void CubeGLWidget::moveUpLayerPrime() { syncCubeOrientation(); m_cube.Up(); update(); }
+void CubeGLWidget::moveDownLayer() { syncCubeOrientation(); m_cube.D();  update(); }
+void CubeGLWidget::moveDownLayerPrime() { syncCubeOrientation(); m_cube.Dp(); update(); }
+void CubeGLWidget::moveRightLayer() { syncCubeOrientation(); m_cube.R();  update(); }
+void CubeGLWidget::moveRightLayerPrime() { syncCubeOrientation(); m_cube.Rp(); update(); }
+void CubeGLWidget::moveLeftLayer() { syncCubeOrientation(); m_cube.L();  update(); }
+void CubeGLWidget::moveLeftLayerPrime() { syncCubeOrientation(); m_cube.Lp(); update(); }
+void CubeGLWidget::moveFrontLayer() { syncCubeOrientation(); m_cube.F();  update(); }
+void CubeGLWidget::moveFrontLayerPrime() { syncCubeOrientation(); m_cube.Fp(); update(); }
+void CubeGLWidget::moveBackLayer() { syncCubeOrientation(); m_cube.B();  update(); }
+void CubeGLWidget::moveBackLayerPrime() { syncCubeOrientation(); m_cube.Bp(); update(); }
