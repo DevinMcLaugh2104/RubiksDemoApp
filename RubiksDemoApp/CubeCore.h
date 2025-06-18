@@ -1,12 +1,27 @@
 #pragma once
+
 #include <array>
 #include <QMatrix4x4>
 #include <QVector3D>
 
+constexpr float GAP = 1.02f; // spacing between cubies for visual clarity
+
+// Enum for face indices
+enum Face {
+    UP = 0,
+    DOWN,
+    LEFT,
+    RIGHT,
+    FRONT,
+    BACK
+};
+
 struct Cubie {
     QMatrix4x4 transform;
     std::array<QVector3D, 6> faceColors; // Up, Down, Left, Right, Front, Back
+    QVector3D index; // <-- ADD THIS
 };
+
 
 class CubeCore {
 public:
@@ -14,11 +29,15 @@ public:
     Cubie cube[SIZE][SIZE][SIZE];
 
     CubeCore();
-    void rotateLayer(char axis, int index, bool clockwise);
+
+    // Accessors
     const Cubie& getCubie(int x, int y, int z) const;
     Cubie& accessCubie(int x, int y, int z);
 
-    // Original movement functions (keep them for solving logic)
+    // General layer rotation function
+    void rotateLayer(char axis, int index, bool clockwise);
+
+    // WCA face turns
     void moveRightLayer();
     void moveRightLayerPrime();
     void moveLeftLayer();
@@ -31,6 +50,8 @@ public:
     void moveFrontLayerPrime();
     void moveBackLayer();
     void moveBackLayerPrime();
+
+    // Extended moves (to be implemented as needed)
     void moveELayer();
     void moveELayerPrime();
     void moveMLayer();
