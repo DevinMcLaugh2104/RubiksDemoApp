@@ -1,108 +1,91 @@
 #include "CubeGLWidget.h"
 #include <QOpenGLShader>
+#include <QMouseEvent>
+#include <iostream>
 
-// ---------------- GLSL ----------------
+// ---------- Vertex Shader ----------
 static const char* vShader = R"(#version 330 core
 layout(location = 0) in vec3 aPos;
 layout(location = 1) in vec3 aNormal;
 
-out vec3 vNormal;            // world-space normal
-flat out vec3 vIdx;          // cubie logical index (0,1,2)
+out vec3 vWorldNormal;       // normal AFTER cubie rotation
+flat out vec3 vIdx;          // logical cubie index (debug / pick)
 
 uniform mat4 model, view, projection;
-uniform vec3 cubieIndex;     // set from C++
+uniform vec3 cubieIndex;
 
 void main()
 {
-    vec4 worldPos = model * vec4(aPos,1.0);
-    vNormal = mat3(transpose(inverse(model))) * aNormal;
-    vIdx    = cubieIndex;
-    gl_Position = projection * view * worldPos;
+    // model is a pure rigid-body transform so mat3(model) is fine
+    vWorldNormal = mat3(model) * aNormal;
+    vIdx         = cubieIndex;
+    gl_Position  = projection * view * model * vec4(aPos, 1.0);
 })";
 
+// ---------- Fragment Shader ----------
 static const char* fShader = R"(#version 330 core
-in vec3 vNormal;
+in  vec3 vWorldNormal;
 flat in vec3 vIdx;
 out vec4 FragColor;
 
-const vec3 white  = vec3(1,1,1);    // +Y
-const vec3 yellow = vec3(1,1,0);    // –Y
-const vec3 green  = vec3(0,1,0);    // +Z
-const vec3 blue   = vec3(0,0,1);    // –Z
-const vec3 red    = vec3(1,0,0);    // +X
-const vec3 orange = vec3(1,0.5,0);  // –X
-const vec3 dark   = vec3(0.05);     // internal faces
+uniform vec3 faceColors[6];            // UP, DOWN, LEFT, RIGHT, FRONT, BACK
 
 void main()
 {
-    vec3 n = normalize(vNormal);
-    vec3 col = dark;                    // default
+    vec3 n   = normalize(vWorldNormal);
+    vec3 col = vec3(0.05);             // default “dark”
 
-    // show stickers only on the outer layer + outward-facing side
-    if (n.y >  0.9 && vIdx.y > 1.5) col = white;
-    else if (n.y < -0.9 && vIdx.y < 0.5) col = yellow;
-    else if (n.z >  0.9 && vIdx.z > 1.5) col = green;
-    else if (n.z < -0.9 && vIdx.z < 0.5) col = blue;
-    else if (n.x >  0.9 && vIdx.x > 1.5) col = red;
-    else if (n.x < -0.9 && vIdx.x < 0.5) col = orange;
+    // pick colour based on the *current* outward direction
+    if      (n.y >  0.9) col = faceColors[0]; // UP    (+Y)
+    else if (n.y < -0.9) col = faceColors[1]; // DOWN  (–Y)
+    else if (n.x < -0.9) col = faceColors[2]; // LEFT  (–X)
+    else if (n.x >  0.9) col = faceColors[3]; // RIGHT (+X)
+    else if (n.z >  0.9) col = faceColors[4]; // FRONT (+Z)
+    else if (n.z < -0.9) col = faceColors[5]; // BACK  (–Z)
 
-    FragColor = vec4(col,1.0);
+    FragColor = vec4(col, 1.0);
 })";
 
-// ------------ cube geometry (24 verts, 36 indices) ----------
-static const float verts[] = { // pos              // normal
-    // –Z
-    -0.5f,-0.5f,-0.5f,  0,0,-1,
-     0.5f,-0.5f,-0.5f,  0,0,-1,
-     0.5f, 0.5f,-0.5f,  0,0,-1,
-    -0.5f, 0.5f,-0.5f,  0,0,-1,
-    // +Z
-    -0.5f,-0.5f, 0.5f,  0,0,1,
-     0.5f,-0.5f, 0.5f,  0,0,1,
-     0.5f, 0.5f, 0.5f,  0,0,1,
-    -0.5f, 0.5f, 0.5f,  0,0,1,
-    // –X
-    -0.5f,-0.5f,-0.5f, -1,0,0,
-    -0.5f, 0.5f,-0.5f, -1,0,0,
-    -0.5f, 0.5f, 0.5f, -1,0,0,
-    -0.5f,-0.5f, 0.5f, -1,0,0,
-    // +X
-     0.5f,-0.5f,-0.5f,  1,0,0,
-     0.5f, 0.5f,-0.5f,  1,0,0,
-     0.5f, 0.5f, 0.5f,  1,0,0,
-     0.5f,-0.5f, 0.5f,  1,0,0,
-     // –Y
-     -0.5f,-0.5f,-0.5f,  0,-1,0,
-     -0.5f,-0.5f, 0.5f,  0,-1,0,
-      0.5f,-0.5f, 0.5f,  0,-1,0,
-      0.5f,-0.5f,-0.5f,  0,-1,0,
-      // +Y
-      -0.5f, 0.5f,-0.5f,  0,1,0,
-      -0.5f, 0.5f, 0.5f,  0,1,0,
-       0.5f, 0.5f, 0.5f,  0,1,0,
-       0.5f, 0.5f,-0.5f,  0,1,0
+// ---------- Cube Geometry (unchanged) ----------
+static const float verts[] = {
+    // pos              // normal
+    -0.5f,-0.5f,-0.5f,  0,0,-1,   0.5f,-0.5f,-0.5f,  0,0,-1,
+     0.5f, 0.5f,-0.5f,  0,0,-1,  -0.5f, 0.5f,-0.5f,  0,0,-1,
+
+    -0.5f,-0.5f, 0.5f,  0,0, 1,   0.5f,-0.5f, 0.5f,  0,0, 1,
+     0.5f, 0.5f, 0.5f,  0,0, 1,  -0.5f, 0.5f, 0.5f,  0,0, 1,
+
+    -0.5f,-0.5f,-0.5f, -1,0, 0,  -0.5f, 0.5f,-0.5f, -1,0, 0,
+    -0.5f, 0.5f, 0.5f, -1,0, 0,  -0.5f,-0.5f, 0.5f, -1,0, 0,
+
+     0.5f,-0.5f,-0.5f,  1,0, 0,   0.5f, 0.5f,-0.5f,  1,0, 0,
+     0.5f, 0.5f, 0.5f,  1,0, 0,   0.5f,-0.5f, 0.5f,  1,0, 0,
+
+    -0.5f,-0.5f,-0.5f,  0,-1,0,  -0.5f,-0.5f, 0.5f,  0,-1,0,
+     0.5f,-0.5f, 0.5f,  0,-1,0,   0.5f,-0.5f,-0.5f,  0,-1,0,
+
+    -0.5f, 0.5f,-0.5f,  0, 1,0,  -0.5f, 0.5f, 0.5f,  0, 1,0,
+     0.5f, 0.5f, 0.5f,  0, 1,0,   0.5f, 0.5f,-0.5f,  0, 1,0
 };
 
 static const unsigned idx[] = {
-     0, 1, 2, 2, 3, 0,   // –Z
-     4, 5, 6, 6, 7, 4,   // +Z
-     8, 9,10,10,11, 8,   // –X
-    12,13,14,14,15,12,   // +X
-    16,17,18,18,19,16,   // –Y
-    20,21,22,22,23,20    // +Y
+     0, 1, 2, 2, 3, 0,   4, 5, 6, 6, 7, 4,
+     8, 9,10,10,11, 8,  12,13,14,14,15,12,
+    16,17,18,18,19,16,  20,21,22,22,23,20
 };
 
-// ------------ ctor / dtor ------------
+// ---------- Constructor / Destructor ----------
 CubeGLWidget::CubeGLWidget(QWidget* parent) : QOpenGLWidget(parent) {}
+
 CubeGLWidget::~CubeGLWidget()
 {
     makeCurrent();
-    m_ebo.destroy(); m_vbo.destroy(); m_vao.destroy();
+    m_ebo.destroy();  m_vbo.destroy();  m_vao.destroy();
     m_prog.removeAllShaders();
     doneCurrent();
 }
 
-// ------------ GL init ---------------
+// ---------- GL initialisation ----------
 void CubeGLWidget::initializeGL()
 {
     initializeOpenGLFunctions();
@@ -113,6 +96,7 @@ void CubeGLWidget::initializeGL()
     m_prog.link();
 
     m_vao.create();  m_vao.bind();
+
     m_vbo.create();  m_vbo.bind();
     m_vbo.allocate(verts, sizeof(verts));
 
@@ -136,7 +120,7 @@ void CubeGLWidget::resizeGL(int w, int h)
     m_proj.perspective(45.f, float(w) / h, 0.1f, 100.f);
 }
 
-// ------------ draw ------------------
+// ---------- Drawing ----------
 void CubeGLWidget::paintGL()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -149,10 +133,10 @@ void CubeGLWidget::paintGL()
     m_pickProj = m_proj;
     m_pickView = m_view;
 
-    QMatrix4x4 model;
-    model.rotate(m_xRot, 1, 0, 0);
-    model.rotate(m_yRot, 0, 1, 0);
-    m_cube.setOrientation(model);  // Keep orientation up to date here too
+    QMatrix4x4 cubeRot;
+    cubeRot.rotate(m_xRot, 1, 0, 0);
+    cubeRot.rotate(m_yRot, 0, 1, 0);
+    m_cube.setOrientation(cubeRot);
 
     m_prog.bind();
     m_prog.setUniformValue("view", m_view);
@@ -163,14 +147,20 @@ void CubeGLWidget::paintGL()
         for (int y = 0; y < RubiksCube::SIZE; ++y)
             for (int z = 0; z < RubiksCube::SIZE; ++z)
             {
-                const RubiksCube::Cubie& c = m_cube.getCubie(x, y, z);
+                const auto& c = m_cube.getCubie(x, y, z);
                 m_prog.setUniformValue("model", c.transform);
                 m_prog.setUniformValue("cubieIndex", c.index);
+                m_prog.setUniformValueArray("faceColors",
+                    c.faceColors.data(), 6);
                 glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
             }
     m_vao.release();
     m_prog.release();
 }
+
+// ---------- Mouse handlers & helpers (unchanged) ----------
+// ... (the rest of the file is identical to the previous version)
+
 
 // ------------ mouse -----------------
 void CubeGLWidget::mousePressEvent(QMouseEvent* e)

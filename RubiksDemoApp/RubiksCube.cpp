@@ -95,46 +95,57 @@ void RubiksCube::rotateLayer(char axis, int index, bool clockwise) {
 void RubiksCube::rotateFacesX(Cubie& c, bool cw) {
     auto& f = c.faceColors;
     if (cw) {
-        std::swap(f[UP], f[FRONT]);
-        std::swap(f[FRONT], f[DOWN]);
-        std::swap(f[DOWN], f[BACK]);
+        QVector3D temp = f[UP];
+        f[UP] = f[BACK];
+        f[BACK] = f[DOWN];
+        f[DOWN] = f[FRONT];
+        f[FRONT] = temp;
     }
     else {
-        std::swap(f[UP], f[BACK]);
-        std::swap(f[BACK], f[DOWN]);
-        std::swap(f[DOWN], f[FRONT]);
+        QVector3D temp = f[UP];
+        f[UP] = f[FRONT];
+        f[FRONT] = f[DOWN];
+        f[DOWN] = f[BACK];
+        f[BACK] = temp;
     }
 }
 
 void RubiksCube::rotateFacesY(Cubie& c, bool cw) {
     auto& f = c.faceColors;
     if (cw) {
-        std::swap(f[FRONT], f[RIGHT]);
-        std::swap(f[RIGHT], f[BACK]);
-        std::swap(f[BACK], f[LEFT]);
+        QVector3D temp = f[FRONT];
+        f[FRONT] = f[LEFT];
+        f[LEFT] = f[BACK];
+        f[BACK] = f[RIGHT];
+        f[RIGHT] = temp;
     }
     else {
-        std::swap(f[FRONT], f[LEFT]);
-        std::swap(f[LEFT], f[BACK]);
-        std::swap(f[BACK], f[RIGHT]);
+        QVector3D temp = f[FRONT];
+        f[FRONT] = f[RIGHT];
+        f[RIGHT] = f[BACK];
+        f[BACK] = f[LEFT];
+        f[LEFT] = temp;
     }
 }
 
 void RubiksCube::rotateFacesZ(Cubie& c, bool cw) {
     auto& f = c.faceColors;
     if (cw) {
-        std::swap(f[UP], f[LEFT]);
-        std::swap(f[LEFT], f[DOWN]);
-        std::swap(f[DOWN], f[RIGHT]);
+        QVector3D temp = f[UP];
+        f[UP] = f[RIGHT];
+        f[RIGHT] = f[DOWN];
+        f[DOWN] = f[LEFT];
+        f[LEFT] = temp;
     }
     else {
-        std::swap(f[UP], f[RIGHT]);
-        std::swap(f[RIGHT], f[DOWN]);
-        std::swap(f[DOWN], f[LEFT]);
+        QVector3D temp = f[UP];
+        f[UP] = f[LEFT];
+        f[LEFT] = f[DOWN];
+        f[DOWN] = f[RIGHT];
+        f[RIGHT] = temp;
     }
 }
 
-// Move logic (top-relative)
 void RubiksCube::U() {
     AxisInfo up = mapWorldDirToAxis(QVector3D(0, 1, 0));
     int layer = up.positive ? 2 : 0;
