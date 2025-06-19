@@ -1,47 +1,69 @@
 #pragma once
-
 #include <QOpenGLWidget>
 #include <QOpenGLFunctions_3_3_Core>
 #include <QOpenGLVertexArrayObject>
 #include <QOpenGLBuffer>
 #include <QOpenGLShaderProgram>
-#include <QElapsedTimer>
 #include <QMatrix4x4>
-#include <QTimer>
 #include <QMouseEvent>
-#include "CubeCore.h"
+#include "RubiksCube.h"           
 
-class CubeGLWidget : public QOpenGLWidget, protected QOpenGLFunctions_3_3_Core {
+class CubeGLWidget : public QOpenGLWidget,
+    protected QOpenGLFunctions_3_3_Core
+{
     Q_OBJECT
 
 public:
     explicit CubeGLWidget(QWidget* parent = nullptr);
     ~CubeGLWidget() override;
 
+public slots:
+    void moveUpLayer();
+    void moveUpLayerPrime();
+    void moveRightLayer();
+    void moveRightLayerPrime();
+    void moveFrontLayer();
+    void moveFrontLayerPrime();
+    void moveDownLayer();
+    void moveDownLayerPrime();
+    void moveLeftLayer();
+    void moveLeftLayerPrime();
+    void moveBackLayer();
+    void moveBackLayerPrime();
+
+    void syncCubeOrientation();
+
+    float xRotation() const { return m_xRot; }
+    float yRotation() const { return m_yRot; }
+
 protected:
     void initializeGL() override;
     void resizeGL(int w, int h) override;
     void paintGL() override;
 
-    void mousePressEvent(QMouseEvent* event) override;
-    void mouseMoveEvent(QMouseEvent* event) override;
-    void mouseReleaseEvent(QMouseEvent* event) override;
+    void mousePressEvent(QMouseEvent* e) override;
+    void mouseMoveEvent(QMouseEvent* e) override;
 
 private:
+    void rotateCube(int dx, int dy);
+    bool intersectsCube(const QVector3D& O, const QVector3D& D);
+
+    // GL objects
     QOpenGLVertexArrayObject m_vao;
     QOpenGLBuffer            m_vbo{ QOpenGLBuffer::VertexBuffer };
     QOpenGLBuffer            m_ebo{ QOpenGLBuffer::IndexBuffer };
-    QOpenGLShaderProgram     m_program;
-    QElapsedTimer            m_timer;
+    QOpenGLShaderProgram     m_prog;
 
-    QMatrix4x4               m_projection;
-    QMatrix4x4               m_view;
-    float                    m_xRot = 25.0f;
-    float                    m_yRot = 30.0f;
-    QPoint                   m_lastPos;
+    // camera
+    QMatrix4x4 m_proj, m_view;
+    float      m_xRot = 25.f, m_yRot = 30.f;
+    QPoint     m_lastPos;
+    bool       m_rotating = false;
+    QVector3D  m_camPos{ 0,0,10 };
 
-    CubeCore                 m_cube;
+    // picking helpers
+    QMatrix4x4 m_pickProj, m_pickView;
 
-    void drawCubie(const Cubie& cubie);
+    // cube data
+    RubiksCube m_cube;             // <<< NEW
 };
-

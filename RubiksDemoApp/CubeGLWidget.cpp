@@ -1,162 +1,237 @@
 #include "CubeGLWidget.h"
 #include <QOpenGLShader>
-#include <QMouseEvent>
-#include <iostream>
 
-// Vertex shader
-static const char* vertexShaderSource = R"(#version 330 core
+// ---------------- GLSL ----------------
+static const char* vShader = R"(#version 330 core
 layout(location = 0) in vec3 aPos;
-layout(location = 1) in vec3 aColor;
-out vec3 vertexColor;
-uniform mat4 model;
-uniform mat4 view;
-uniform mat4 projection;
-void main() {
-    vertexColor = aColor;
-    gl_Position = projection * view * model * vec4(aPos, 1.0);
-})";
+layout(location = 1) in vec3 aNormal;
 
-// Fragment shader
-static const char* fragmentShaderSource = R"(#version 330 core
-in vec3 vertexColor;
-out vec4 FragColor;
-void main() {
-    FragColor = vec4(vertexColor, 1.0);
-})";
+out vec3 vNormal;            // world-space normal
+flat out vec3 vIdx;          // cubie logical index (0,1,2)
 
-CubeGLWidget::CubeGLWidget(QWidget* parent)
-    : QOpenGLWidget(parent)
+uniform mat4 model, view, projection;
+uniform vec3 cubieIndex;     // set from C++
+
+void main()
 {
-}
+    vec4 worldPos = model * vec4(aPos,1.0);
+    vNormal = mat3(transpose(inverse(model))) * aNormal;
+    vIdx    = cubieIndex;
+    gl_Position = projection * view * worldPos;
+})";
 
-CubeGLWidget::~CubeGLWidget() {
+static const char* fShader = R"(#version 330 core
+in vec3 vNormal;
+flat in vec3 vIdx;
+out vec4 FragColor;
+
+const vec3 white  = vec3(1,1,1);    // +Y
+const vec3 yellow = vec3(1,1,0);    // –Y
+const vec3 green  = vec3(0,1,0);    // +Z
+const vec3 blue   = vec3(0,0,1);    // –Z
+const vec3 red    = vec3(1,0,0);    // +X
+const vec3 orange = vec3(1,0.5,0);  // –X
+const vec3 dark   = vec3(0.05);     // internal faces
+
+void main()
+{
+    vec3 n = normalize(vNormal);
+    vec3 col = dark;                    // default
+
+    // show stickers only on the outer layer + outward-facing side
+    if (n.y >  0.9 && vIdx.y > 1.5) col = white;
+    else if (n.y < -0.9 && vIdx.y < 0.5) col = yellow;
+    else if (n.z >  0.9 && vIdx.z > 1.5) col = green;
+    else if (n.z < -0.9 && vIdx.z < 0.5) col = blue;
+    else if (n.x >  0.9 && vIdx.x > 1.5) col = red;
+    else if (n.x < -0.9 && vIdx.x < 0.5) col = orange;
+
+    FragColor = vec4(col,1.0);
+})";
+
+// ------------ cube geometry (24 verts, 36 indices) ----------
+static const float verts[] = { // pos              // normal
+    // –Z
+    -0.5f,-0.5f,-0.5f,  0,0,-1,
+     0.5f,-0.5f,-0.5f,  0,0,-1,
+     0.5f, 0.5f,-0.5f,  0,0,-1,
+    -0.5f, 0.5f,-0.5f,  0,0,-1,
+    // +Z
+    -0.5f,-0.5f, 0.5f,  0,0,1,
+     0.5f,-0.5f, 0.5f,  0,0,1,
+     0.5f, 0.5f, 0.5f,  0,0,1,
+    -0.5f, 0.5f, 0.5f,  0,0,1,
+    // –X
+    -0.5f,-0.5f,-0.5f, -1,0,0,
+    -0.5f, 0.5f,-0.5f, -1,0,0,
+    -0.5f, 0.5f, 0.5f, -1,0,0,
+    -0.5f,-0.5f, 0.5f, -1,0,0,
+    // +X
+     0.5f,-0.5f,-0.5f,  1,0,0,
+     0.5f, 0.5f,-0.5f,  1,0,0,
+     0.5f, 0.5f, 0.5f,  1,0,0,
+     0.5f,-0.5f, 0.5f,  1,0,0,
+     // –Y
+     -0.5f,-0.5f,-0.5f,  0,-1,0,
+     -0.5f,-0.5f, 0.5f,  0,-1,0,
+      0.5f,-0.5f, 0.5f,  0,-1,0,
+      0.5f,-0.5f,-0.5f,  0,-1,0,
+      // +Y
+      -0.5f, 0.5f,-0.5f,  0,1,0,
+      -0.5f, 0.5f, 0.5f,  0,1,0,
+       0.5f, 0.5f, 0.5f,  0,1,0,
+       0.5f, 0.5f,-0.5f,  0,1,0
+};
+
+static const unsigned idx[] = {
+     0, 1, 2, 2, 3, 0,   // –Z
+     4, 5, 6, 6, 7, 4,   // +Z
+     8, 9,10,10,11, 8,   // –X
+    12,13,14,14,15,12,   // +X
+    16,17,18,18,19,16,   // –Y
+    20,21,22,22,23,20    // +Y
+};
+
+// ------------ ctor / dtor ------------
+CubeGLWidget::CubeGLWidget(QWidget* parent) : QOpenGLWidget(parent) {}
+CubeGLWidget::~CubeGLWidget()
+{
     makeCurrent();
-    m_ebo.destroy();
-    m_vbo.destroy();
-    m_vao.destroy();
-    m_program.removeAllShaders();
+    m_ebo.destroy(); m_vbo.destroy(); m_vao.destroy();
+    m_prog.removeAllShaders();
     doneCurrent();
 }
 
-void CubeGLWidget::initializeGL() {
+// ------------ GL init ---------------
+void CubeGLWidget::initializeGL()
+{
     initializeOpenGLFunctions();
     glEnable(GL_DEPTH_TEST);
 
-    // Compile and link shaders
-    if (!m_program.addShaderFromSourceCode(QOpenGLShader::Vertex, vertexShaderSource))
-        qWarning("Vertex shader error:\n%s", m_program.log().toLocal8Bit().constData());
-    if (!m_program.addShaderFromSourceCode(QOpenGLShader::Fragment, fragmentShaderSource))
-        qWarning("Fragment shader error:\n%s", m_program.log().toLocal8Bit().constData());
+    m_prog.addShaderFromSourceCode(QOpenGLShader::Vertex, vShader);
+    m_prog.addShaderFromSourceCode(QOpenGLShader::Fragment, fShader);
+    m_prog.link();
 
-    m_program.bindAttributeLocation("aPos", 0);
-    m_program.bindAttributeLocation("aColor", 1);
+    m_vao.create();  m_vao.bind();
+    m_vbo.create();  m_vbo.bind();
+    m_vbo.allocate(verts, sizeof(verts));
 
-    if (!m_program.link()) {
-        qWarning("Shader link error:\n%s", m_program.log().toLocal8Bit().constData());
-    }
+    m_ebo.create();  m_ebo.bind();
+    m_ebo.allocate(idx, sizeof(idx));
 
-    m_program.bind();  // <<-- CRUCIAL
-
-    static const float vertices[] = {
-        // positions         // colors
-        -0.5f,-0.5f,-0.5f,   1,0,0,
-         0.5f,-0.5f,-0.5f,   0,1,0,
-         0.5f, 0.5f,-0.5f,   0,0,1,
-        -0.5f, 0.5f,-0.5f,   1,1,0,
-        -0.5f,-0.5f, 0.5f,   1,0,1,
-         0.5f,-0.5f, 0.5f,   0,1,1,
-         0.5f, 0.5f, 0.5f,   1,1,1,
-        -0.5f, 0.5f, 0.5f,   .5f,.5f,.5f
-    };
-    static const unsigned int indices[] = {
-         0,1,2, 2,3,0,
-         1,5,6, 6,2,1,
-         5,4,7, 7,6,5,
-         4,0,3, 3,7,4,
-         3,2,6, 6,7,3,
-         4,5,1, 1,0,4
-    };
-
-    m_vao.create();
-    m_vao.bind();
-
-    m_vbo.create();
-    m_vbo.bind();
-    m_vbo.allocate(vertices, sizeof(vertices));
-
-    m_ebo.create();
-    m_ebo.bind();
-    m_ebo.allocate(indices, sizeof(indices));
-
-    m_program.enableAttributeArray(0); // location 0 -> aPos
-    m_program.setAttributeBuffer(0, GL_FLOAT, 0, 3, 6 * sizeof(float));
-
-    m_program.enableAttributeArray(1); // location 1 -> aColor
-    m_program.setAttributeBuffer(1, GL_FLOAT, 3 * sizeof(float), 3, 6 * sizeof(float));
+    const int stride = 6 * sizeof(float);
+    m_prog.enableAttributeArray(0);
+    m_prog.setAttributeBuffer(0, GL_FLOAT, 0, 3, stride);
+    m_prog.enableAttributeArray(1);
+    m_prog.setAttributeBuffer(1, GL_FLOAT, 3 * sizeof(float), 3, stride);
 
     m_vao.release();
-    m_program.release();
-
-    m_timer.start();
+    m_prog.release();
 }
 
-
-void CubeGLWidget::resizeGL(int w, int h) {
+void CubeGLWidget::resizeGL(int w, int h)
+{
     glViewport(0, 0, w, h);
-    m_projection.setToIdentity();
-    m_projection.perspective(45.0f, float(w) / h, 0.1f, 100.0f);
+    m_proj.setToIdentity();
+    m_proj.perspective(45.f, float(w) / h, 0.1f, 100.f);
 }
 
-void CubeGLWidget::paintGL() {
+// ------------ draw ------------------
+void CubeGLWidget::paintGL()
+{
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    m_program.bind();
 
-    // Build view
     m_view.setToIdentity();
     m_view.translate(0, 0, -10);
     m_view.rotate(m_xRot, 1, 0, 0);
     m_view.rotate(m_yRot, 0, 1, 0);
 
-    m_program.setUniformValue("view", m_view);
-    m_program.setUniformValue("projection", m_projection);
+    m_pickProj = m_proj;
+    m_pickView = m_view;
+
+    QMatrix4x4 model;
+    model.rotate(m_xRot, 1, 0, 0);
+    model.rotate(m_yRot, 0, 1, 0);
+    m_cube.setOrientation(model);  // Keep orientation up to date here too
+
+    m_prog.bind();
+    m_prog.setUniformValue("view", m_view);
+    m_prog.setUniformValue("projection", m_proj);
 
     m_vao.bind();
-
-    for (int x = 0; x < CubeCore::SIZE; ++x)
-        for (int y = 0; y < CubeCore::SIZE; ++y)
-            for (int z = 0; z < CubeCore::SIZE; ++z) {
-                const auto& cubie = m_cube.getCubie(x, y, z);
-                m_program.setUniformValue("model", cubie.transform);
+    for (int x = 0; x < RubiksCube::SIZE; ++x)
+        for (int y = 0; y < RubiksCube::SIZE; ++y)
+            for (int z = 0; z < RubiksCube::SIZE; ++z)
+            {
+                const RubiksCube::Cubie& c = m_cube.getCubie(x, y, z);
+                m_prog.setUniformValue("model", c.transform);
+                m_prog.setUniformValue("cubieIndex", c.index);
                 glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
             }
-
     m_vao.release();
-    m_program.release();
-
-    update();
+    m_prog.release();
 }
 
-void CubeGLWidget::mousePressEvent(QMouseEvent* event) {
-    m_lastPos = event->pos();
+// ------------ mouse -----------------
+void CubeGLWidget::mousePressEvent(QMouseEvent* e)
+{
+    float x = (2.f * e->position().x()) / width() - 1.f;
+    float y = 1.f - (2.f * e->position().y()) / height();
+    QVector4D clip(x, y, -1, 1);
+    QVector4D eye = m_pickProj.inverted() * clip; eye.setZ(-1); eye.setW(0);
+    QVector3D ray = (m_pickView.inverted() * eye).toVector3D().normalized();
+
+    m_rotating = !intersectsCube(m_camPos, ray);
+    m_lastPos = e->pos();
 }
 
-void CubeGLWidget::mouseMoveEvent(QMouseEvent* event) {
-    int dx = int(event->position().x()) - m_lastPos.x();
-    int dy = int(event->position().y()) - m_lastPos.y();
-
-    if (event->buttons() & Qt::LeftButton) {
-        m_xRot += dy;
-        m_yRot += dx;
+void CubeGLWidget::mouseMoveEvent(QMouseEvent* e)
+{
+    if (m_rotating && (e->buttons() & Qt::LeftButton))
+    {
+        rotateCube(e->position().x() - m_lastPos.x(),
+            e->position().y() - m_lastPos.y());
+        m_lastPos = e->pos();
         update();
     }
-
-    m_lastPos = event->position().toPoint(); 
 }
 
-void CubeGLWidget::mouseReleaseEvent(QMouseEvent* event) {
-    if ((event->position().toPoint() - m_lastPos).manhattanLength() > 20) {
-        m_cube.rotateLayer('y', 1, true);
-        update();
+// ------------ helpers ---------------
+void CubeGLWidget::rotateCube(int dx, int dy) { m_xRot += dy; m_yRot += dx; }
+
+bool CubeGLWidget::intersectsCube(const QVector3D& O, const QVector3D& D)
+{
+    QVector3D mn(-1, -1, -1), mx(1, 1, 1);
+    float tmin = -1e20f, tmax = 1e20f;
+    for (int i = 0; i < 3; ++i)
+    {
+        float inv = 1.f / D[i];
+        float t0 = (mn[i] - O[i]) * inv, t1 = (mx[i] - O[i]) * inv;
+        if (inv < 0) std::swap(t0, t1);
+        tmin = std::max(tmin, t0);
+        tmax = std::min(tmax, t1);
+        if (tmax < tmin) return false;
     }
+    return true;
 }
 
+void CubeGLWidget::syncCubeOrientation()
+{
+    QMatrix4x4 model;
+    model.rotate(m_xRot, 1, 0, 0);
+    model.rotate(m_yRot, 0, 1, 0);
+    m_cube.setOrientation(model);
+}
+
+void CubeGLWidget::moveUpLayer() { syncCubeOrientation(); m_cube.U();  update(); }
+void CubeGLWidget::moveUpLayerPrime() { syncCubeOrientation(); m_cube.Up(); update(); }
+void CubeGLWidget::moveDownLayer() { syncCubeOrientation(); m_cube.D();  update(); }
+void CubeGLWidget::moveDownLayerPrime() { syncCubeOrientation(); m_cube.Dp(); update(); }
+void CubeGLWidget::moveRightLayer() { syncCubeOrientation(); m_cube.R();  update(); }
+void CubeGLWidget::moveRightLayerPrime() { syncCubeOrientation(); m_cube.Rp(); update(); }
+void CubeGLWidget::moveLeftLayer() { syncCubeOrientation(); m_cube.L();  update(); }
+void CubeGLWidget::moveLeftLayerPrime() { syncCubeOrientation(); m_cube.Lp(); update(); }
+void CubeGLWidget::moveFrontLayer() { syncCubeOrientation(); m_cube.F();  update(); }
+void CubeGLWidget::moveFrontLayerPrime() { syncCubeOrientation(); m_cube.Fp(); update(); }
+void CubeGLWidget::moveBackLayer() { syncCubeOrientation(); m_cube.B();  update(); }
+void CubeGLWidget::moveBackLayerPrime() { syncCubeOrientation(); m_cube.Bp(); update(); }

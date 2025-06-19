@@ -11,13 +11,13 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="CubeCore.cpp" />
     <ClCompile Include="CubeGLWidget.cpp" />
     <ClCompile Include="LoginDialog.cpp" />
     <ClCompile Include="MainWindow.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="CubeWindow.cpp" />
     <ClCompile Include="PLLCases.cpp" />
+    <ClCompile Include="RubiksCube.cpp" />
     <ClCompile Include="SettingsDialog.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -30,9 +30,9 @@
     <QtMoc Include="CubeWindow.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="CubeCore.h" />
     <QtMoc Include="LoginDialog.h" />
     <ClInclude Include="PLLCases.h" />
+    <ClInclude Include="RubiksCube.h" />
     <ClInclude Include="SettingsDialog.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

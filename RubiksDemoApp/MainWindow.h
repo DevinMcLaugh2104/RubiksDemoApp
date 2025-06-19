@@ -1,6 +1,7 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include "CubeGLWidget.h"
 #include <QMainWindow>
 #include <QElapsedTimer>
 #include <QTimer>
@@ -16,6 +17,7 @@ class MainWindow : public QMainWindow {
 public:
     explicit MainWindow(QWidget* parent = nullptr);
     ~MainWindow() override;
+ 
 
 protected:
     bool eventFilter(QObject* obj, QEvent* event) override;
@@ -38,7 +40,6 @@ private:
     bool            m_holdActive;
     int             m_timerValue = 1000;
 
-
     // UI
     QLabel* m_scrambleLabel;
     QLabel* m_label;
@@ -47,6 +48,7 @@ private:
     QPushButton* cubeButton;
     QPushButton* settingsButton;
 
+    CubeGLWidget* m_glWidget;
     QColor m_backgroundColor = QColor(Qt::white);
 
 };

@@ -2,13 +2,13 @@
 #include <string>
 #include <vector>
 #include <iostream>
-#include "CubeCore.h"
+#include "RubiksCube.h"
 using namespace std;
 
-class PLLCases : CubeCore
+class PLLCases : RubiksCube
 {
 private:
-	CubeCore& mainCube;
+	RubiksCube& mainCube;
 	vector<int> mLastLayer;
 	vector<vector<int>> mAllCasesVec;
 	int mCaseIndex;
@@ -48,33 +48,12 @@ public:
 	void setAllCases();
 	void getCaseIndex();
 
-	PLLCases(CubeCore& cube) : mainCube(cube) {
+	PLLCases(RubiksCube& cube) : mainCube(cube) {
 
 	}
 
 	//Permutation Functions
-	void UaPerm();
-	void UbPerm();
-	void ZPerm();
-	void HPerm();
-	void AaPerm();
-	void AbPerm();
-	void EPerm();
-	void TPerm();
-	void FPerm();
-	void JaPerm();
-	void JbPerm();
-	void RaPerm();
-	void RbPerm();
-	void VPerm();
-	void YPerm();
-	void NaPerm();
-	void NbPerm();
-	void GaPerm();
-	void GbPerm();
-	void GcPerm();
-	void GdPerm();
 
-	void permuteLastLayer();
+	
 };
 
