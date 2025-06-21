@@ -26,19 +26,38 @@ MainWindow::MainWindow(QWidget* parent)
     m_scrambleLabel->setAlignment(Qt::AlignCenter);
     m_scrambleLabel->setWordWrap(true);
     m_scrambleLabel->setText(generateScramble(20));
+    QFont scrambleFont = m_scrambleLabel->font();
+    scrambleFont.setPointSize(38);
+    scrambleFont.setBold(true);
+    m_scrambleLabel->setFont(scrambleFont);
 
-    m_label = new QLabel("Hold Space ≥1 s, then release to start", this);
+    m_label = new QLabel("0.000 s", this);
     m_label->setAlignment(Qt::AlignCenter);
+    QFont timerFont = m_label->font();
+    timerFont.setPointSize(48);
+    timerFont.setBold(true);
+    m_label->setFont(timerFont);
 
-    auto* timerBox = new QGroupBox("Timer", this);
+    // New instruction label
+    m_instructionLabel = new QLabel("Hold Space ≥1 s, then release to start", this);
+    m_instructionLabel->setAlignment(Qt::AlignCenter);
+    QFont instrFont = m_instructionLabel->font();
+    instrFont.setPointSize(14);
+    m_instructionLabel->setFont(instrFont);
+
+    auto* timerBox = new QGroupBox(this);
     auto* timerLay = new QVBoxLayout(timerBox);
     timerLay->addWidget(m_label);
+    timerLay->addWidget(m_instructionLabel);
     timerLay->addStretch();
-    timerBox->setStyleSheet("QGroupBox{background:lightgray;}");
+    timerBox->setStyleSheet("border: none;");
+    timerBox->setFixedSize(500, 300);
+    timerBox->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
     m_table = new QTableWidget(this);
     m_table->setColumnCount(2);
     m_table->setHorizontalHeaderLabels({ "#", "Time (s)" });
+    m_table->setMaximumWidth(300);
     m_table->horizontalHeader()->setStretchLastSection(true);
     m_table->verticalHeader()->setVisible(false);
     m_table->setEditTriggers(QAbstractItemView::NoEditTriggers);
@@ -47,8 +66,10 @@ MainWindow::MainWindow(QWidget* parent)
     auto* central = new QWidget(this);
     auto* outerLayout = new QVBoxLayout(central);
     auto* contentLay = new QHBoxLayout;
-    contentLay->addWidget(timerBox, 0);
-    contentLay->addWidget(m_table, 1);
+    contentLay->addWidget(m_table, 1);           
+    contentLay->addStretch();                    
+    contentLay->addWidget(timerBox, 0, Qt::AlignCenter);  
+    contentLay->addStretch();                    
 
     outerLayout->addWidget(m_scrambleLabel);
     outerLayout->addLayout(contentLay);
@@ -73,6 +94,7 @@ MainWindow::~MainWindow() = default;
 
 bool MainWindow::eventFilter(QObject* obj, QEvent* event)
 {
+
     if ((event->type() == QEvent::KeyPress || event->type() == QEvent::KeyRelease) &&
         static_cast<QKeyEvent*>(event)->isAutoRepeat())
         return false;
@@ -100,6 +122,8 @@ bool MainWindow::eventFilter(QObject* obj, QEvent* event)
                     m_update->start();
                     m_running = true;
                     m_label->setText("0.000 s");
+                    m_label->setStyleSheet("font-size: 64px; font-weight: bold;");
+                    m_instructionLabel->hide();
                 }
             }
             else
@@ -119,7 +143,7 @@ bool MainWindow::eventFilter(QObject* obj, QEvent* event)
                 timeItem->setTextAlignment(Qt::AlignCenter);
                 m_table->setItem(row, 1, timeItem);
 
-                m_label->setText("Final: " + timeItem->text() + " s");
+                m_label->setText(timeItem->text() + " s");
                 m_scrambleLabel->setText(generateScramble(20));
             }
 

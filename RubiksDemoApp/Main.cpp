@@ -8,7 +8,7 @@ int main(int argc, char* argv[]) {
     LoginDialog login;
     if (login.exec() == QDialog::Accepted) {
         MainWindow w;
-        w.show();
+        w.showMaximized();
         return app.exec();
     }
 

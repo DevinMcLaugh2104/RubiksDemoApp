@@ -43,6 +43,7 @@ private:
     // UI
     QLabel* m_scrambleLabel;
     QLabel* m_label;
+    QLabel* m_instructionLabel;
     QTableWidget* m_table;
 
     QPushButton* cubeButton;

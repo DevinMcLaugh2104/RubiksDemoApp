@@ -174,67 +174,62 @@ void RubiksCube::Dp() {
     rotateLayer(up.axis, layer, clockwise);
 }
 
-void RubiksCube::R() {
-    AxisInfo up = mapWorldDirToAxis(QVector3D(0, 1, 0));
-    AxisInfo right = mapWorldDirToAxis(QVector3D(1, 0, 0));
-    int layer = right.positive ? 2 : 0;
-    bool clockwise = (up.positive ^ right.positive);
+// --- Right face ----------------------------------------------------------
+void RubiksCube::R()  {
+    AxisInfo right = mapWorldDirToAxis({1,0,0});
+    int  layer     = right.positive ? 2 : 0;
+    bool clockwise =  !right.positive;
     rotateLayer(right.axis, layer, clockwise);
 }
 
 void RubiksCube::Rp() {
-    AxisInfo up = mapWorldDirToAxis(QVector3D(0, 1, 0));
-    AxisInfo right = mapWorldDirToAxis(QVector3D(1, 0, 0));
-    int layer = right.positive ? 2 : 0;
-    bool clockwise = !(up.positive ^ right.positive);
+    AxisInfo right = mapWorldDirToAxis({1,0,0});
+    int  layer     = right.positive ? 2 : 0;
+    bool clockwise = right.positive;
     rotateLayer(right.axis, layer, clockwise);
 }
 
-void RubiksCube::L() {
-    AxisInfo up = mapWorldDirToAxis(QVector3D(0, 1, 0));
-    AxisInfo right = mapWorldDirToAxis(QVector3D(1, 0, 0));
-    int layer = right.positive ? 0 : 2;
-    bool clockwise = !(up.positive ^ right.positive);
+// --- Left face -----------------------------------------------------------
+void RubiksCube::L()  {
+    AxisInfo right = mapWorldDirToAxis({1,0,0});
+    int  layer     = right.positive ? 0 : 2;
+    bool clockwise = right.positive;
     rotateLayer(right.axis, layer, clockwise);
 }
 
 void RubiksCube::Lp() {
-    AxisInfo up = mapWorldDirToAxis(QVector3D(0, 1, 0));
-    AxisInfo right = mapWorldDirToAxis(QVector3D(1, 0, 0));
-    int layer = right.positive ? 0 : 2;
-    bool clockwise = (up.positive ^ right.positive);
+    AxisInfo right = mapWorldDirToAxis({1,0,0});
+    int  layer     = right.positive ? 0 : 2;
+    bool clockwise =  !right.positive;
     rotateLayer(right.axis, layer, clockwise);
 }
 
-void RubiksCube::F() {
-    AxisInfo up = mapWorldDirToAxis(QVector3D(0, 1, 0));
-    AxisInfo front = mapWorldDirToAxis(QVector3D(0, 0, 1)); 
-    int layer = front.positive ? 2 : 0;
-    bool clockwise = (up.positive ^ front.positive);
+// --- Front face ----------------------------------------------------------
+void RubiksCube::F()  {
+    AxisInfo front = mapWorldDirToAxis({0,0,1});
+    int  layer     = front.positive ? 2 : 0;
+    bool clockwise =  !front.positive;
     rotateLayer(front.axis, layer, clockwise);
 }
 
 void RubiksCube::Fp() {
-    AxisInfo up = mapWorldDirToAxis(QVector3D(0, 1, 0));
-    AxisInfo front = mapWorldDirToAxis(QVector3D(0, 0, 1)); 
-    int layer = front.positive ? 2 : 0;
-    bool clockwise = !(up.positive ^ front.positive);
+    AxisInfo front = mapWorldDirToAxis({0,0,1});
+    int  layer     = front.positive ? 2 : 0;
+    bool clockwise = front.positive;
     rotateLayer(front.axis, layer, clockwise);
 }
 
-void RubiksCube::B() {
-    AxisInfo up = mapWorldDirToAxis(QVector3D(0, 1, 0));
-    AxisInfo front = mapWorldDirToAxis(QVector3D(0, 0, 1)); 
-    int layer = front.positive ? 0 : 2;
-    bool clockwise = !(up.positive ^ front.positive);
+// --- Back face -----------------------------------------------------------
+void RubiksCube::B()  {
+    AxisInfo front = mapWorldDirToAxis({0,0,1});
+    int  layer     = front.positive ? 0 : 2;
+    bool clockwise = front.positive;
     rotateLayer(front.axis, layer, clockwise);
 }
 
 void RubiksCube::Bp() {
-    AxisInfo up = mapWorldDirToAxis(QVector3D(0, 1, 0));
-    AxisInfo front = mapWorldDirToAxis(QVector3D(0, 0, 1)); 
-    int layer = front.positive ? 0 : 2;
-    bool clockwise = (up.positive ^ front.positive);
+    AxisInfo front = mapWorldDirToAxis({0,0,1});
+    int  layer     = front.positive ? 0 : 2;
+    bool clockwise =  !front.positive;
     rotateLayer(front.axis, layer, clockwise);
 }
-
