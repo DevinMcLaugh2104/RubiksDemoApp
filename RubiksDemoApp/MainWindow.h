@@ -43,6 +43,7 @@ private:
     // UI
     QLabel* m_scrambleLabel;
     QLabel* m_label;
+    QLabel* m_instructionLabel;
     QTableWidget* m_table;
 
     QPushButton* cubeButton;
@@ -51,6 +52,7 @@ private:
     CubeGLWidget* m_glWidget;
     QColor m_backgroundColor = QColor(Qt::white);
 
+    void scrambleCube(CubeGLWidget& cube);
 };
 
-#endif // MAINWINDOW_H
+#endif 
