@@ -208,8 +208,8 @@ bool CubeGLWidget::intersectsCube(const QVector3D& O, const QVector3D& D)
 void CubeGLWidget::syncCubeOrientation()
 {
     QMatrix4x4 model;
-    model.rotate(m_xRot, 1, 0, 0);
-    model.rotate(m_yRot, 0, 1, 0);
+    m_xRot = 30.0f;
+    m_yRot = -45.0f;
     m_cube.setOrientation(model);
 }
 
@@ -232,4 +232,9 @@ void CubeGLWidget::moveBackLayer() { syncCubeOrientation(); m_cube.B();  update(
 void CubeGLWidget::moveBackLayerPrime() { syncCubeOrientation(); m_cube.Bp(); update(); }
 void CubeGLWidget::moveBackLayer2() { syncCubeOrientation(); m_cube.B2(); update(); }
 
-
+void CubeGLWidget::resetCube() {
+    m_cube = RubiksCube();          
+    m_xRot = 30.0f;            
+    m_yRot = -45.0f;
+    update();
+}

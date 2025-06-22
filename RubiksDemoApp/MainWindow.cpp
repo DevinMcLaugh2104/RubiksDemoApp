@@ -248,8 +248,8 @@ void MainWindow::onShowCube()
     addBtn("L'", [cubeW] { cubeW->moveLeftLayerPrime(); cubeW->update(); }, 4, 1);
     addBtn("B", [cubeW] { cubeW->moveBackLayer();  cubeW->update(); }, 5, 0);
     addBtn("B'", [cubeW] { cubeW->moveBackLayerPrime(); cubeW->update(); }, 5, 1);
-
     addBtn("Scramble Cube", [cubeW,this] { scrambleCube(*cubeW); cubeW->update(); }, 6, 0);
+    addBtn("Reset Cube", [cubeW] { cubeW->resetCube(); cubeW->update(); }, 6, 1);
 
     rootLay->addWidget(cubeW, 1);
     rootLay->addLayout(btnGrid);

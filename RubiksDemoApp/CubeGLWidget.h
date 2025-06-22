@@ -38,6 +38,7 @@ public slots:
     void moveBackLayer2();
 
     void syncCubeOrientation();
+    void resetCube();
 
     float xRotation() const { return m_xRot; }
     float yRotation() const { return m_yRot; }
@@ -62,7 +63,7 @@ private:
 
     // camera
     QMatrix4x4 m_proj, m_view;
-    float      m_xRot = 25.f, m_yRot = 30.f;
+    float      m_xRot = 30.0f, m_yRot = -45.0f;
     QPoint     m_lastPos;
     bool       m_rotating = false;
     QVector3D  m_camPos{ 0,0,10 };
