@@ -215,13 +215,21 @@ void CubeGLWidget::syncCubeOrientation()
 
 void CubeGLWidget::moveUpLayer() { syncCubeOrientation(); m_cube.U();  update(); }
 void CubeGLWidget::moveUpLayerPrime() { syncCubeOrientation(); m_cube.Up(); update(); }
+void CubeGLWidget::moveUpLayer2() { syncCubeOrientation(); m_cube.U2(); update(); }
 void CubeGLWidget::moveDownLayer() { syncCubeOrientation(); m_cube.D();  update(); }
 void CubeGLWidget::moveDownLayerPrime() { syncCubeOrientation(); m_cube.Dp(); update(); }
+void CubeGLWidget::moveDownLayer2() { syncCubeOrientation(); m_cube.D2(); update(); }
 void CubeGLWidget::moveRightLayer() { syncCubeOrientation(); m_cube.R();  update(); }
 void CubeGLWidget::moveRightLayerPrime() { syncCubeOrientation(); m_cube.Rp(); update(); }
-void CubeGLWidget::moveLeftLayer() { syncCubeOrientation(); m_cube.L();  update(); }
+void CubeGLWidget::moveRightLayer2() { syncCubeOrientation(); m_cube.R2(); update(); }
+void CubeGLWidget::moveLeftLayer() { syncCubeOrientation(); m_cube.L(); update(); }
 void CubeGLWidget::moveLeftLayerPrime() { syncCubeOrientation(); m_cube.Lp(); update(); }
+void CubeGLWidget::moveLeftLayer2() { syncCubeOrientation(); m_cube.L2(); update(); }
 void CubeGLWidget::moveFrontLayer() { syncCubeOrientation(); m_cube.F();  update(); }
 void CubeGLWidget::moveFrontLayerPrime() { syncCubeOrientation(); m_cube.Fp(); update(); }
+void CubeGLWidget::moveFrontLayer2() { syncCubeOrientation(); m_cube.F2(); update(); }
 void CubeGLWidget::moveBackLayer() { syncCubeOrientation(); m_cube.B();  update(); }
 void CubeGLWidget::moveBackLayerPrime() { syncCubeOrientation(); m_cube.Bp(); update(); }
+void CubeGLWidget::moveBackLayer2() { syncCubeOrientation(); m_cube.B2(); update(); }
+
+

@@ -174,25 +174,23 @@ void RubiksCube::Dp() {
     rotateLayer(up.axis, layer, clockwise);
 }
 
-// --- Right face ----------------------------------------------------------
 void RubiksCube::R()  {
     AxisInfo right = mapWorldDirToAxis({1,0,0});
-    int  layer     = right.positive ? 2 : 0;
+    int  layer = right.positive ? 2 : 0;
     bool clockwise =  !right.positive;
     rotateLayer(right.axis, layer, clockwise);
 }
 
 void RubiksCube::Rp() {
     AxisInfo right = mapWorldDirToAxis({1,0,0});
-    int  layer     = right.positive ? 2 : 0;
+    int  layer = right.positive ? 2 : 0;
     bool clockwise = right.positive;
     rotateLayer(right.axis, layer, clockwise);
 }
 
-// --- Left face -----------------------------------------------------------
 void RubiksCube::L()  {
     AxisInfo right = mapWorldDirToAxis({1,0,0});
-    int  layer     = right.positive ? 0 : 2;
+    int  layer = right.positive ? 0 : 2;
     bool clockwise = right.positive;
     rotateLayer(right.axis, layer, clockwise);
 }
@@ -204,32 +202,54 @@ void RubiksCube::Lp() {
     rotateLayer(right.axis, layer, clockwise);
 }
 
-// --- Front face ----------------------------------------------------------
 void RubiksCube::F()  {
     AxisInfo front = mapWorldDirToAxis({0,0,1});
-    int  layer     = front.positive ? 2 : 0;
+    int  layer = front.positive ? 2 : 0;
     bool clockwise =  !front.positive;
     rotateLayer(front.axis, layer, clockwise);
 }
 
 void RubiksCube::Fp() {
     AxisInfo front = mapWorldDirToAxis({0,0,1});
-    int  layer     = front.positive ? 2 : 0;
+    int  layer = front.positive ? 2 : 0;
     bool clockwise = front.positive;
     rotateLayer(front.axis, layer, clockwise);
 }
 
-// --- Back face -----------------------------------------------------------
 void RubiksCube::B()  {
     AxisInfo front = mapWorldDirToAxis({0,0,1});
-    int  layer     = front.positive ? 0 : 2;
+    int  layer = front.positive ? 0 : 2;
     bool clockwise = front.positive;
     rotateLayer(front.axis, layer, clockwise);
 }
 
 void RubiksCube::Bp() {
     AxisInfo front = mapWorldDirToAxis({0,0,1});
-    int  layer     = front.positive ? 0 : 2;
+    int  layer = front.positive ? 0 : 2;
     bool clockwise =  !front.positive;
     rotateLayer(front.axis, layer, clockwise);
+}
+
+void RubiksCube::U2() {
+    U();  U();
+}
+
+void RubiksCube::D2() {
+    D();  D();
+}
+
+void RubiksCube::R2() {
+    R();  R();
+}
+
+void RubiksCube::L2() {
+    L();  L();
+}
+
+void RubiksCube::F2() {
+    F();  F();
+}
+
+void RubiksCube::B2() {
+    B();  B();
 }

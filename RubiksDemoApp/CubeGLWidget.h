@@ -20,16 +20,22 @@ public:
 public slots:
     void moveUpLayer();
     void moveUpLayerPrime();
+    void moveUpLayer2();
     void moveRightLayer();
     void moveRightLayerPrime();
+    void moveRightLayer2();
     void moveFrontLayer();
     void moveFrontLayerPrime();
+    void moveFrontLayer2();
     void moveDownLayer();
     void moveDownLayerPrime();
+    void moveDownLayer2();
     void moveLeftLayer();
     void moveLeftLayerPrime();
+    void moveLeftLayer2();
     void moveBackLayer();
     void moveBackLayerPrime();
+    void moveBackLayer2();
 
     void syncCubeOrientation();
 

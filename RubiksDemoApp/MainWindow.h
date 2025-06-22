@@ -52,6 +52,7 @@ private:
     CubeGLWidget* m_glWidget;
     QColor m_backgroundColor = QColor(Qt::white);
 
+    void scrambleCube(CubeGLWidget& cube);
 };
 
-#endif // MAINWINDOW_H
+#endif 

@@ -2,7 +2,6 @@
 #include "CubeWindow.h"
 #include "CubeGLWidget.h"
 #include "SettingsDialog.h"
-
 #include <QApplication>
 #include <QEvent>
 #include <QKeyEvent>
@@ -15,6 +14,7 @@
 #include <QRandomGenerator>
 #include <QPushButton>
 #include <QLabel>
+#include <QStringList>
 
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent), m_update(new QTimer(this)), m_running(false), m_holdActive(false)
@@ -26,19 +26,22 @@ MainWindow::MainWindow(QWidget* parent)
     m_scrambleLabel->setAlignment(Qt::AlignCenter);
     m_scrambleLabel->setWordWrap(true);
     m_scrambleLabel->setText(generateScramble(20));
+
+    //Scramble Font
     QFont scrambleFont = m_scrambleLabel->font();
-    scrambleFont.setPointSize(38);
-    scrambleFont.setBold(true);
+    scrambleFont.setPointSize(30);
     m_scrambleLabel->setFont(scrambleFont);
 
-    m_label = new QLabel("0.000 s", this);
+    m_label = new QLabel("0.000", this);
     m_label->setAlignment(Qt::AlignCenter);
+
+    // Timer Font
     QFont timerFont = m_label->font();
-    timerFont.setPointSize(48);
+    timerFont.setPointSize(60);
     timerFont.setBold(true);
     m_label->setFont(timerFont);
 
-    // New instruction label
+    // Instruction label
     m_instructionLabel = new QLabel("Hold Space ≥1 s, then release to start", this);
     m_instructionLabel->setAlignment(Qt::AlignCenter);
     QFont instrFont = m_instructionLabel->font();
@@ -121,8 +124,8 @@ bool MainWindow::eventFilter(QObject* obj, QEvent* event)
                     m_elapsed.restart();
                     m_update->start();
                     m_running = true;
-                    m_label->setText("0.000 s");
-                    m_label->setStyleSheet("font-size: 64px; font-weight: bold;");
+                    m_label->setText("0.000");
+                    m_label->setStyleSheet("font-size: 80px; font-weight: bold; ");
                     m_instructionLabel->hide();
                 }
             }
@@ -189,7 +192,7 @@ static Axis detectTopAxis(float xDeg, float yDeg)
 // ───── show CubeWindow with grid-layout buttons ─────────────────────────
 void MainWindow::onShowCube()
 {
-    auto* cw = new CubeWindow(this);
+    auto* cw = new CubeWindow(nullptr);
     cw->setAttribute(Qt::WA_DeleteOnClose);
 
     // central widget & layouts
@@ -245,6 +248,8 @@ void MainWindow::onShowCube()
     addBtn("L'", [cubeW] { cubeW->moveLeftLayerPrime(); cubeW->update(); }, 4, 1);
     addBtn("B", [cubeW] { cubeW->moveBackLayer();  cubeW->update(); }, 5, 0);
     addBtn("B'", [cubeW] { cubeW->moveBackLayerPrime(); cubeW->update(); }, 5, 1);
+
+    addBtn("Scramble Cube", [cubeW,this] { scrambleCube(*cubeW); cubeW->update(); }, 6, 0);
 
     rootLay->addWidget(cubeW, 1);
     rootLay->addLayout(btnGrid);
@@ -305,5 +310,45 @@ QString MainWindow::generateScramble(int length)
 void MainWindow::onUpdateTimer()
 {
     double secs = m_elapsed.elapsed() / 1000.0;
-    m_label->setText(QString::asprintf("%.3f s", secs));
+    m_label->setText(QString::asprintf("%.3f", secs));
 }
+
+
+void MainWindow::scrambleCube(CubeGLWidget& cube) {
+    QStringList currentScramble = m_scrambleLabel->text().split(' ', Qt::SkipEmptyParts);
+
+    static const std::unordered_map<QString, std::function<void(CubeGLWidget&)>> moveIndex {
+        { "U", &CubeGLWidget::moveUpLayer },
+        { "U'", &CubeGLWidget::moveUpLayerPrime },
+        { "U2", &CubeGLWidget::moveUpLayer2 },
+        { "D", &CubeGLWidget::moveDownLayer },
+        { "D'", &CubeGLWidget::moveDownLayerPrime },
+        { "D2", &CubeGLWidget::moveDownLayer2 },
+        { "R", &CubeGLWidget::moveRightLayer },
+        { "R'", &CubeGLWidget::moveRightLayerPrime },
+        { "R2", &CubeGLWidget::moveRightLayer2 },
+        { "L", &CubeGLWidget::moveLeftLayer },
+        { "L'", &CubeGLWidget::moveLeftLayerPrime },
+        { "L2", &CubeGLWidget::moveLeftLayer2 },
+        { "F", &CubeGLWidget::moveFrontLayer },
+        { "F'", &CubeGLWidget::moveFrontLayerPrime },
+        { "F2", &CubeGLWidget::moveFrontLayer2 },
+        { "B", &CubeGLWidget::moveBackLayer },
+        { "B'", &CubeGLWidget::moveBackLayerPrime },
+        { "B2", &CubeGLWidget::moveBackLayer2 }
+    };
+
+    for (const QString& move : currentScramble) {
+        
+        auto it = moveIndex.find(move);
+
+        if (it != moveIndex.end()) {
+            it->second(cube);
+        }
+        else {
+            break;
+        }        
+    }
+}
+
+

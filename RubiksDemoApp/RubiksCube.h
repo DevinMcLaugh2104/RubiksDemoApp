@@ -25,12 +25,12 @@ public:
     void setOrientation(const QMatrix4x4& cubeToWorld) { m_orientation = cubeToWorld; }
 
     // ?? high-level moves, always relative to the *current* top face ???????????
-    void R();  void Rp();
-    void L();  void Lp();
-    void U();  void Up();
-    void D();  void Dp();
-    void F();  void Fp();
-    void B();  void Bp();
+    void R();  void Rp();  void R2();
+    void L();  void Lp();  void L2();
+    void U();  void Up();  void U2();
+    void D();  void Dp();  void D2();
+    void F();  void Fp();  void F2();
+    void B();  void Bp();  void B2();
 
     // ?? low-level helpers (fixed global axes) – still useful internally ???????
     void rotateLayer(char axis, int index, bool clockwise);
