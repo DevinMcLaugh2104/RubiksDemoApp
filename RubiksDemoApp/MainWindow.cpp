@@ -21,27 +21,25 @@ MainWindow::MainWindow(QWidget* parent)
 {
     qApp->installEventFilter(this);
 
-    // ───── UI top (timer, scramble, table) ──────────────────────────────
     m_scrambleLabel = new QLabel(this);
     m_scrambleLabel->setAlignment(Qt::AlignCenter);
     m_scrambleLabel->setWordWrap(true);
-    m_scrambleLabel->setText(generateScramble(20));
+    QString firstScramble = generateScramble(20);
+    m_scramblesVec.append(firstScramble);
+    m_currentScrambleIndex = 0;
+    m_scrambleLabel->setText(firstScramble);
 
-    //Scramble Font
     QFont scrambleFont = m_scrambleLabel->font();
     scrambleFont.setPointSize(30);
     m_scrambleLabel->setFont(scrambleFont);
 
     m_timerLabel = new QLabel("0.000", this);
     m_timerLabel->setAlignment(Qt::AlignCenter);
-
-    // Timer Font
     QFont timerFont = m_timerLabel->font();
     timerFont.setPointSize(60);
     timerFont.setBold(true);
     m_timerLabel->setFont(timerFont);
 
-    // Instruction label
     m_instructionLabel = new QLabel("Hold Space ≥1 s, then release to start", this);
     m_instructionLabel->setAlignment(Qt::AlignCenter);
     QFont instrFont = m_instructionLabel->font();
@@ -55,7 +53,6 @@ MainWindow::MainWindow(QWidget* parent)
     timerLay->addStretch();
     timerBox->setStyleSheet("border: none;");
     timerBox->setFixedSize(500, 300);
-    timerBox->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
     m_table = new QTableWidget(this);
     m_table->setColumnCount(2);
@@ -66,32 +63,32 @@ MainWindow::MainWindow(QWidget* parent)
     m_table->setEditTriggers(QAbstractItemView::NoEditTriggers);
     m_table->setSelectionMode(QAbstractItemView::NoSelection);
 
-    // statistics layout
     m_statisticLayout = new QVBoxLayout;
-
-    m_bestSolve = new QLabel("Best Solve: " + QString::number(0.000));
-    m_bestAo5 = new QLabel("Best Ao5: " + QString::number(0.000)); 
-    m_currentAo5 = new QLabel("Current Ao5: " + QString::number(0.000));
-
+    m_bestSolve = new QLabel("Best Solve: 0.000");
+    m_bestAo5 = new QLabel("Best Ao5: 0.000");
+    m_currentAo5 = new QLabel("Current Ao5: 0.000");
     m_statisticLayout->addWidget(m_bestSolve);
     m_statisticLayout->addWidget(m_bestAo5);
     m_statisticLayout->addWidget(m_currentAo5);
 
-    setLayout(m_statisticLayout);  
-
     auto* central = new QWidget(this);
     auto* outerLayout = new QVBoxLayout(central);
     auto* contentLay = new QHBoxLayout;
-    contentLay->addWidget(m_table, 1);           
-    contentLay->addStretch();                    
-    contentLay->addWidget(timerBox, 0, Qt::AlignCenter);  
-    contentLay->addStretch();    
+    contentLay->addWidget(m_table, 1);
+    contentLay->addStretch();
+    contentLay->addWidget(timerBox, 0, Qt::AlignCenter);
+    contentLay->addStretch();
 
     outerLayout->addWidget(m_scrambleLabel);
+    auto* scrambleNavLayout = new QHBoxLayout;
+    prevScrambleButton = new QPushButton("Previous Scramble", this);
+    nextScrambleButton = new QPushButton("Next Scramble", this);
+    scrambleNavLayout->addWidget(prevScrambleButton);
+    scrambleNavLayout->addWidget(nextScrambleButton);
+    outerLayout->addLayout(scrambleNavLayout);
     outerLayout->addLayout(m_statisticLayout);
     outerLayout->addLayout(contentLay);
 
-    // main-window buttons
     cubeButton = new QPushButton("Open Cube", this);
     settingsButton = new QPushButton("Settings", this);
     outerLayout->addWidget(cubeButton);
@@ -99,42 +96,36 @@ MainWindow::MainWindow(QWidget* parent)
 
     connect(cubeButton, &QPushButton::clicked, this, &MainWindow::onShowCube);
     connect(settingsButton, &QPushButton::clicked, this, &MainWindow::openSettingsDialog);
+    connect(prevScrambleButton, &QPushButton::clicked, this, &MainWindow::prevScramble);
+    connect(nextScrambleButton, &QPushButton::clicked, this, &MainWindow::nextScramble);
 
     setCentralWidget(central);
-
-    // timer update
     m_update->setInterval(50);
     connect(m_update, &QTimer::timeout, this, &MainWindow::onUpdateTimer);
 }
+
 
 MainWindow::~MainWindow() = default;
 
 bool MainWindow::eventFilter(QObject* obj, QEvent* event)
 {
-
     if ((event->type() == QEvent::KeyPress || event->type() == QEvent::KeyRelease) &&
         static_cast<QKeyEvent*>(event)->isAutoRepeat())
         return false;
 
-    if (event->type() == QEvent::KeyPress)
-    {
+    if (event->type() == QEvent::KeyPress) {
         auto* ke = static_cast<QKeyEvent*>(event);
-        if (ke->key() == Qt::Key_Space && !m_running && !m_holdActive)
-        {
+        if (ke->key() == Qt::Key_Space && !m_running && !m_holdActive) {
             m_holdActive = true;
             m_holdTimer.restart();
             return true;
         }
     }
-    else if (event->type() == QEvent::KeyRelease)
-    {
+    else if (event->type() == QEvent::KeyRelease) {
         auto* ke = static_cast<QKeyEvent*>(event);
-        if (ke->key() == Qt::Key_Space)
-        {
-            if (!m_running)
-            {
-                if (m_holdActive && m_holdTimer.elapsed() >= m_timerValue)
-                {
+        if (ke->key() == Qt::Key_Space) {
+            if (!m_running) {
+                if (m_holdActive && m_holdTimer.elapsed() >= m_timerValue) {
                     m_elapsed.restart();
                     m_update->start();
                     m_running = true;
@@ -143,8 +134,7 @@ bool MainWindow::eventFilter(QObject* obj, QEvent* event)
                     m_instructionLabel->hide();
                 }
             }
-            else
-            {
+            else {
                 m_update->stop();
                 m_running = false;
                 double secs = m_elapsed.elapsed() / 1000.0;
@@ -161,14 +151,19 @@ bool MainWindow::eventFilter(QObject* obj, QEvent* event)
                 m_table->setItem(row, 1, timeItem);
 
                 m_timerLabel->setText(timeItem->text() + " s");
-                m_scrambleLabel->setText(generateScramble(20));
-            }
 
+                if (m_currentScrambleIndex < m_scramblesVec.size() - 1) {
+                    m_scramblesVec.resize(m_currentScrambleIndex + 1);
+                }
+                QString newScramble = generateScramble(20);
+                m_scramblesVec.push_back(newScramble);
+                m_currentScrambleIndex = m_scramblesVec.size() - 1;
+                m_scrambleLabel->setText(newScramble);
+            }
             m_holdActive = false;
             return true;
         }
     }
-
     return QMainWindow::eventFilter(obj, event);
 }
 
@@ -288,8 +283,7 @@ void MainWindow::openSettingsDialog()
     }
 }
 
-QString MainWindow::generateScramble(int length)
-{
+QString MainWindow::generateScramble(int length) {
     static const QVector<QString> moves = {
         "U","U'","U2","D","D'","D2",
         "L","L'","L2","R","R'","R2",
@@ -307,26 +301,24 @@ QString MainWindow::generateScramble(int length)
     QRandomGenerator rng = QRandomGenerator::securelySeeded();
     QStringList scr;
     int lastAxis = -1;
-    for (int i = 0; i < length; ++i)
-    {
+    for (int i = 0; i < length; ++i) {
         int idx, ax;
         do {
             idx = rng.bounded(moves.size());
             ax = axisOf(moves[idx]);
         } while (ax == lastAxis);
-
         scr << moves[idx];
         lastAxis = ax;
     }
     return scr.join(' ');
 }
 
+
 void MainWindow::onUpdateTimer()
 {
     double secs = m_elapsed.elapsed() / 1000.0;
     m_timerLabel->setText(QString::asprintf("%.3f", secs));
 }
-
 
 void MainWindow::scrambleCube(CubeGLWidget& cube) {
     QStringList currentScramble = m_scrambleLabel->text().split(' ', Qt::SkipEmptyParts);
@@ -362,6 +354,26 @@ void MainWindow::scrambleCube(CubeGLWidget& cube) {
         else {
             break;
         }        
+    }
+}
+
+void MainWindow::prevScramble() {
+    if (m_currentScrambleIndex > 0) {
+        m_currentScrambleIndex--;
+        m_scrambleLabel->setText(m_scramblesVec[m_currentScrambleIndex]);
+    }
+}
+
+void MainWindow::nextScramble() {
+    if (m_currentScrambleIndex < m_scramblesVec.size() - 1) {
+        m_currentScrambleIndex++;
+        m_scrambleLabel->setText(m_scramblesVec[m_currentScrambleIndex]);
+    }
+    else {
+        QString newScramble = generateScramble(20);
+        m_scramblesVec.push_back(newScramble);
+        m_scrambleLabel->setText(newScramble);
+        m_currentScrambleIndex++;
     }
 }
 

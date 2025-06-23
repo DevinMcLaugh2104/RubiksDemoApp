@@ -29,7 +29,10 @@ private slots:
     void openSettingsDialog();
 
 private:
+    // scramble logic
     QString generateScramble(int length);
+    QVector<QString> m_scramblesVec;
+    int m_currentScrambleIndex = -1;
 
     // main stopwatch
     QElapsedTimer m_elapsed;
@@ -55,9 +58,14 @@ private:
 
     QPushButton* cubeButton;
     QPushButton* settingsButton;
+    QPushButton* prevScrambleButton;
+    QPushButton* nextScrambleButton;
 
     CubeGLWidget* m_glWidget;
     QColor m_backgroundColor = QColor(Qt::white);
+
+    void prevScramble();
+    void nextScramble();
 
     void scrambleCube(CubeGLWidget& cube);
 
