@@ -1,7 +1,6 @@
 #include "RubiksCube.h"
 #include <algorithm>
 
-// Sticker colors
 static const QVector3D WHITE{ 1, 1, 1 };
 static const QVector3D YELLOW{ 1, 1, 0 };
 static const QVector3D ORANGE{ 1, 0.5, 0 };

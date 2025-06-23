@@ -72,5 +72,5 @@ private:
     QMatrix4x4 m_pickProj, m_pickView;
 
     // cube data
-    RubiksCube m_cube;             // <<< NEW
+    RubiksCube m_cube;             
 };

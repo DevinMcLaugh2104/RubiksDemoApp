@@ -46,7 +46,7 @@ void main()
     FragColor = vec4(col, 1.0);
 })";
 
-// ---------- Cube Geometry (unchanged) ----------
+// ---------- Cube Geometry ----------
 static const float verts[] = {
     // pos              // normal
     -0.5f,-0.5f,-0.5f,  0,0,-1,   0.5f,-0.5f,-0.5f,  0,0,-1,
@@ -158,11 +158,6 @@ void CubeGLWidget::paintGL()
     m_prog.release();
 }
 
-// ---------- Mouse handlers & helpers (unchanged) ----------
-// ... (the rest of the file is identical to the previous version)
-
-
-// ------------ mouse -----------------
 void CubeGLWidget::mousePressEvent(QMouseEvent* e)
 {
     float x = (2.f * e->position().x()) / width() - 1.f;
@@ -186,7 +181,6 @@ void CubeGLWidget::mouseMoveEvent(QMouseEvent* e)
     }
 }
 
-// ------------ helpers ---------------
 void CubeGLWidget::rotateCube(int dx, int dy) { m_xRot += dy; m_yRot += dx; }
 
 bool CubeGLWidget::intersectsCube(const QVector3D& O, const QVector3D& D)
@@ -213,6 +207,13 @@ void CubeGLWidget::syncCubeOrientation()
     m_cube.setOrientation(model);
 }
 
+void CubeGLWidget::resetCube() {
+    m_cube = RubiksCube();          
+    m_xRot = 30.0f;            
+    m_yRot = -45.0f;
+    update();
+}
+
 void CubeGLWidget::moveUpLayer() { syncCubeOrientation(); m_cube.U();  update(); }
 void CubeGLWidget::moveUpLayerPrime() { syncCubeOrientation(); m_cube.Up(); update(); }
 void CubeGLWidget::moveUpLayer2() { syncCubeOrientation(); m_cube.U2(); update(); }
@@ -232,9 +233,3 @@ void CubeGLWidget::moveBackLayer() { syncCubeOrientation(); m_cube.B();  update(
 void CubeGLWidget::moveBackLayerPrime() { syncCubeOrientation(); m_cube.Bp(); update(); }
 void CubeGLWidget::moveBackLayer2() { syncCubeOrientation(); m_cube.B2(); update(); }
 
-void CubeGLWidget::resetCube() {
-    m_cube = RubiksCube();          
-    m_xRot = 30.0f;            
-    m_yRot = -45.0f;
-    update();
-}

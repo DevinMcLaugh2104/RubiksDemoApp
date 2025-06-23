@@ -10,6 +10,7 @@
 #include <QPushButton>
 #include <QColor>
 #include <QColorDialog>
+#include <qgridlayout.h>
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -31,20 +32,27 @@ private:
     QString generateScramble(int length);
 
     // main stopwatch
-    QElapsedTimer   m_elapsed;
+    QElapsedTimer m_elapsed;
     QTimer* m_update;
-    bool            m_running;
+    bool m_running;
 
     // hold-to-start logic
-    QElapsedTimer   m_holdTimer;
-    bool            m_holdActive;
-    int             m_timerValue = 1000;
+    QElapsedTimer m_holdTimer;
+    bool m_holdActive;
+    int m_timerValue = 1000;
 
     // UI
     QLabel* m_scrambleLabel;
-    QLabel* m_label;
+    QLabel* m_timerLabel;
     QLabel* m_instructionLabel;
     QTableWidget* m_table;
+
+    //statistics
+    QVBoxLayout* m_statisticLayout;
+    QLabel* m_bestSolve;
+    QLabel* m_currentAo5;
+    QLabel* m_bestAo5;
+    QVector<QTableWidgetItem*>* m_recordedTimes;
 
     QPushButton* cubeButton;
     QPushButton* settingsButton;
@@ -53,6 +61,10 @@ private:
     QColor m_backgroundColor = QColor(Qt::white);
 
     void scrambleCube(CubeGLWidget& cube);
+
+    void updateBestSolve();
+    void updateCurrentAo5();
+    void updateBestAo5();
 };
 
 #endif 

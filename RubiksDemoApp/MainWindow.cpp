@@ -32,14 +32,14 @@ MainWindow::MainWindow(QWidget* parent)
     scrambleFont.setPointSize(30);
     m_scrambleLabel->setFont(scrambleFont);
 
-    m_label = new QLabel("0.000", this);
-    m_label->setAlignment(Qt::AlignCenter);
+    m_timerLabel = new QLabel("0.000", this);
+    m_timerLabel->setAlignment(Qt::AlignCenter);
 
     // Timer Font
-    QFont timerFont = m_label->font();
+    QFont timerFont = m_timerLabel->font();
     timerFont.setPointSize(60);
     timerFont.setBold(true);
-    m_label->setFont(timerFont);
+    m_timerLabel->setFont(timerFont);
 
     // Instruction label
     m_instructionLabel = new QLabel("Hold Space ≥1 s, then release to start", this);
@@ -50,7 +50,7 @@ MainWindow::MainWindow(QWidget* parent)
 
     auto* timerBox = new QGroupBox(this);
     auto* timerLay = new QVBoxLayout(timerBox);
-    timerLay->addWidget(m_label);
+    timerLay->addWidget(m_timerLabel);
     timerLay->addWidget(m_instructionLabel);
     timerLay->addStretch();
     timerBox->setStyleSheet("border: none;");
@@ -66,15 +66,29 @@ MainWindow::MainWindow(QWidget* parent)
     m_table->setEditTriggers(QAbstractItemView::NoEditTriggers);
     m_table->setSelectionMode(QAbstractItemView::NoSelection);
 
+    // statistics layout
+    m_statisticLayout = new QVBoxLayout;
+
+    m_bestSolve = new QLabel("Best Solve: " + QString::number(0.000));
+    m_bestAo5 = new QLabel("Best Ao5: " + QString::number(0.000)); 
+    m_currentAo5 = new QLabel("Current Ao5: " + QString::number(0.000));
+
+    m_statisticLayout->addWidget(m_bestSolve);
+    m_statisticLayout->addWidget(m_bestAo5);
+    m_statisticLayout->addWidget(m_currentAo5);
+
+    setLayout(m_statisticLayout);  
+
     auto* central = new QWidget(this);
     auto* outerLayout = new QVBoxLayout(central);
     auto* contentLay = new QHBoxLayout;
     contentLay->addWidget(m_table, 1);           
     contentLay->addStretch();                    
     contentLay->addWidget(timerBox, 0, Qt::AlignCenter);  
-    contentLay->addStretch();                    
+    contentLay->addStretch();    
 
     outerLayout->addWidget(m_scrambleLabel);
+    outerLayout->addLayout(m_statisticLayout);
     outerLayout->addLayout(contentLay);
 
     // main-window buttons
@@ -124,8 +138,8 @@ bool MainWindow::eventFilter(QObject* obj, QEvent* event)
                     m_elapsed.restart();
                     m_update->start();
                     m_running = true;
-                    m_label->setText("0.000");
-                    m_label->setStyleSheet("font-size: 80px; font-weight: bold; ");
+                    m_timerLabel->setText("0.000");
+                    m_timerLabel->setStyleSheet("font-size: 80px; font-weight: bold; ");
                     m_instructionLabel->hide();
                 }
             }
@@ -146,7 +160,9 @@ bool MainWindow::eventFilter(QObject* obj, QEvent* event)
                 timeItem->setTextAlignment(Qt::AlignCenter);
                 m_table->setItem(row, 1, timeItem);
 
-                m_label->setText(timeItem->text() + " s");
+                //m_recordedTimes->push_back(timeItem);                   //add recorded times to vector for averaging logic
+
+                m_timerLabel->setText(timeItem->text() + " s");
                 m_scrambleLabel->setText(generateScramble(20));
             }
 
@@ -310,7 +326,7 @@ QString MainWindow::generateScramble(int length)
 void MainWindow::onUpdateTimer()
 {
     double secs = m_elapsed.elapsed() / 1000.0;
-    m_label->setText(QString::asprintf("%.3f", secs));
+    m_timerLabel->setText(QString::asprintf("%.3f", secs));
 }
 
 
@@ -349,6 +365,18 @@ void MainWindow::scrambleCube(CubeGLWidget& cube) {
             break;
         }        
     }
+}
+
+void MainWindow::updateBestSolve() {
+
+}
+
+void MainWindow::updateCurrentAo5() {
+
+}
+
+void MainWindow::updateBestAo5() {
+
 }
 
 
