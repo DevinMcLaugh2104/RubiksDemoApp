@@ -160,8 +160,6 @@ bool MainWindow::eventFilter(QObject* obj, QEvent* event)
                 timeItem->setTextAlignment(Qt::AlignCenter);
                 m_table->setItem(row, 1, timeItem);
 
-                //m_recordedTimes->push_back(timeItem);                   //add recorded times to vector for averaging logic
-
                 m_timerLabel->setText(timeItem->text() + " s");
                 m_scrambleLabel->setText(generateScramble(20));
             }

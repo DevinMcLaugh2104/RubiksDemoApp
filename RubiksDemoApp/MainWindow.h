@@ -52,7 +52,6 @@ private:
     QLabel* m_bestSolve;
     QLabel* m_currentAo5;
     QLabel* m_bestAo5;
-    QVector<QTableWidgetItem*>* m_recordedTimes;
 
     QPushButton* cubeButton;
     QPushButton* settingsButton;
