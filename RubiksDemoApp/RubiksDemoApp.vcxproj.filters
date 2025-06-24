@@ -47,6 +47,9 @@
     <ClCompile Include="RubiksCube.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="PenaltyDialog.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="MainWindow.h">
@@ -70,6 +73,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="RubiksCube.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PenaltyDialog.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

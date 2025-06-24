@@ -26,7 +26,8 @@ protected:
 private slots:
     void onUpdateTimer();
     void onShowCube();
-    void openSettingsDialog();
+    void openPenaltyDialog();
+    void openSettingsDialog(); 
 
 private:
     // scramble logic
@@ -62,6 +63,7 @@ private:
     QLabel* m_currentAo5;
     QLabel* m_bestAo5;
 
+    QPushButton* penaltyButton;
     QPushButton* cubeButton;
     QPushButton* settingsButton;
     QPushButton* prevScrambleButton;

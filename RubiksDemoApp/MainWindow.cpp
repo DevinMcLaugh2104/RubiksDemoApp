@@ -1,6 +1,7 @@
 ﻿#include "mainwindow.h"
 #include "CubeWindow.h"
 #include "CubeGLWidget.h"
+#include "PenaltyDialog.h"
 #include "SettingsDialog.h"
 #include <QApplication>
 #include <QEvent>
@@ -56,7 +57,7 @@ MainWindow::MainWindow(QWidget* parent)
 
     m_table = new QTableWidget(this);
     m_table->setColumnCount(2);
-    m_table->setHorizontalHeaderLabels({ "#", "Time (s)" });
+    m_table->setHorizontalHeaderLabels({ "#", "Time (s)"});
     m_table->setMaximumWidth(300);
     m_table->horizontalHeader()->setStretchLastSection(true);
     m_table->verticalHeader()->setVisible(false);
@@ -90,11 +91,15 @@ MainWindow::MainWindow(QWidget* parent)
     outerLayout->addLayout(m_statisticLayout);
     outerLayout->addLayout(contentLay);
 
+    penaltyButton = new QPushButton("Penalty Options", this);
     cubeButton = new QPushButton("Open Cube", this);
     settingsButton = new QPushButton("Settings", this);
+
+    outerLayout->addWidget(penaltyButton);
     outerLayout->addWidget(cubeButton);
     outerLayout->addWidget(settingsButton);
 
+    connect(penaltyButton, &QPushButton::clicked, this, &MainWindow::openPenaltyDialog);
     connect(cubeButton, &QPushButton::clicked, this, &MainWindow::onShowCube);
     connect(settingsButton, &QPushButton::clicked, this, &MainWindow::openSettingsDialog);
     connect(prevScrambleButton, &QPushButton::clicked, this, &MainWindow::prevScramble);
@@ -273,11 +278,16 @@ void MainWindow::onShowCube()
     cw->show();
 }
 
-void MainWindow::openSettingsDialog()
-{
+void MainWindow::openPenaltyDialog() {
+    PenaltyDialog dialog(this);
+    if (dialog.exec() == QDialog::Accepted) {
+
+    }
+}
+
+void MainWindow::openSettingsDialog() {
     SettingsDialog dialog(m_timerValue, m_backgroundColor, this);
-    if (dialog.exec() == QDialog::Accepted)
-    {
+    if (dialog.exec() == QDialog::Accepted) {
         m_timerValue = dialog.getBufferTime();
         m_backgroundColor = dialog.getSelectedColor();
 

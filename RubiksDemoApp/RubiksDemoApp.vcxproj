@@ -16,6 +16,7 @@
     <ClCompile Include="MainWindow.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="CubeWindow.cpp" />
+    <ClCompile Include="PenaltyDialog.cpp" />
     <ClCompile Include="PLLCases.cpp" />
     <ClCompile Include="RubiksCube.cpp" />
     <ClCompile Include="SettingsDialog.cpp" />
@@ -31,6 +32,7 @@
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="LoginDialog.h" />
+    <ClInclude Include="PenaltyDialog.h" />
     <ClInclude Include="PLLCases.h" />
     <ClInclude Include="RubiksCube.h" />
     <ClInclude Include="SettingsDialog.h" />
