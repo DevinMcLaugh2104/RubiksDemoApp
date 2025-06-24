@@ -34,6 +34,12 @@ private:
     QVector<QString> m_scramblesVec;
     int m_currentScrambleIndex = -1;
 
+    double m_currentSolveTime = 0.000;
+    double m_bestSolveTime = 0.000;
+    double m_currentAo5Time = 0.000;
+    double m_bestAo5Time = 0.000;
+    QVector<double> solvesVec;
+
     // main stopwatch
     QElapsedTimer m_elapsed;
     QTimer* m_update;
@@ -69,9 +75,9 @@ private:
 
     void scrambleCube(CubeGLWidget& cube);
 
-    void updateBestSolve();
-    void updateCurrentAo5();
-    void updateBestAo5();
+    void calcBestSolve();
+    void calcCurrentAo5();
+    void calcBestAo5();
 };
 
 #endif 

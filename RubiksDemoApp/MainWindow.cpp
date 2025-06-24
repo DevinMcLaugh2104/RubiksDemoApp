@@ -64,9 +64,10 @@ MainWindow::MainWindow(QWidget* parent)
     m_table->setSelectionMode(QAbstractItemView::NoSelection);
 
     m_statisticLayout = new QVBoxLayout;
-    m_bestSolve = new QLabel("Best Solve: 0.000");
-    m_bestAo5 = new QLabel("Best Ao5: 0.000");
-    m_currentAo5 = new QLabel("Current Ao5: 0.000");
+    m_bestSolve = new QLabel("Best Solve: " + QString::number(m_bestSolveTime, 'f', 3));
+    m_bestAo5 = new QLabel("Best Ao5: " + QString::number(m_bestAo5Time, 'f', 3));
+    m_currentAo5 = new QLabel("Current Ao5: " + QString::number(m_currentAo5Time, 'f', 3));
+
     m_statisticLayout->addWidget(m_bestSolve);
     m_statisticLayout->addWidget(m_bestAo5);
     m_statisticLayout->addWidget(m_currentAo5);
@@ -138,6 +139,8 @@ bool MainWindow::eventFilter(QObject* obj, QEvent* event)
                 m_update->stop();
                 m_running = false;
                 double secs = m_elapsed.elapsed() / 1000.0;
+                m_currentSolveTime = secs;
+                solvesVec.push_back(secs);
 
                 int row = m_table->rowCount();
                 m_table->insertRow(row);
@@ -159,6 +162,9 @@ bool MainWindow::eventFilter(QObject* obj, QEvent* event)
                 m_scramblesVec.push_back(newScramble);
                 m_currentScrambleIndex = m_scramblesVec.size() - 1;
                 m_scrambleLabel->setText(newScramble);
+                calcBestSolve();
+                calcCurrentAo5();
+                calcBestAo5();
             }
             m_holdActive = false;
             return true;
@@ -377,16 +383,100 @@ void MainWindow::nextScramble() {
     }
 }
 
-void MainWindow::updateBestSolve() {
+void MainWindow::calcBestSolve() {
+    if (m_bestSolveTime == 0.000)
+    {
+        m_bestSolveTime = m_currentSolveTime;
+    }
+    else if (m_bestSolveTime != 0.000 && m_currentSolveTime < m_bestSolveTime) {
+        m_bestSolveTime = m_currentSolveTime;
+    }
 
+    m_bestSolve->setText("Best Solve: " + QString::number(m_bestSolveTime, 'f', 3));
 }
 
-void MainWindow::updateCurrentAo5() {
+void MainWindow::calcCurrentAo5() {
 
+    double fastestTime;
+    double slowestTime;
+    int fastestIdx = 0;
+    int slowestIdx = 0;
+    QVector<double> tempVec = solvesVec;
+    
+    if (tempVec.size() == 5) {
+        fastestTime = tempVec[0];
+        slowestTime = tempVec[0];
+
+        for (int i = 0; i < tempVec.size(); i++) {
+            if (tempVec[i] < fastestTime) {
+                fastestTime = tempVec[i];
+                fastestIdx = i;
+            }
+        }
+
+        tempVec.removeAt(fastestIdx);
+
+        for (int i = 0; i < tempVec.size(); i++) {
+            if (tempVec[i] > slowestTime) {
+                slowestTime = tempVec[i];
+                slowestIdx = i;
+            }
+        }
+
+        tempVec.removeAt(slowestIdx);
+
+        double average = ((tempVec[0] + tempVec[1] + tempVec[2]) / 3);
+
+        m_currentAo5Time = average;
+        m_currentAo5->setText("Current Ao5: " + QString::number(m_currentAo5Time, 'f', 3));
+
+        tempVec.clear();
+    }
+
+    if (tempVec.size() == 6) {
+        solvesVec.removeAt(0);
+        tempVec.removeAt(0);
+
+        fastestTime = tempVec[0];
+        slowestTime = tempVec[0];
+
+        for (int i = 0; i < tempVec.size(); i++) {
+            if (tempVec[i] < fastestTime) {
+                fastestTime = tempVec[i];
+                fastestIdx = i;
+            }
+        }
+
+        tempVec.removeAt(fastestIdx);
+
+        for (int i = 0; i < tempVec.size(); i++) {
+            if (tempVec[i] > slowestTime) {
+                slowestTime = tempVec[i];
+                slowestIdx = i;
+            }
+        }
+
+        tempVec.removeAt(slowestIdx);
+
+        double average = ((tempVec[0] + tempVec[1] + tempVec[2]) / 3);
+
+        m_currentAo5Time = average;
+        m_currentAo5->setText("Current Ao5: " + QString::number(m_currentAo5Time, 'f', 3));
+
+        tempVec.clear();
+    }
 }
 
-void MainWindow::updateBestAo5() {
+void MainWindow::calcBestAo5() {
+    if (m_bestAo5Time == 0.000)
+    {
+        m_bestAo5Time = m_currentAo5Time;
+    }
+    else if (m_bestAo5Time != 0.000 && m_currentAo5Time < m_bestAo5Time) {
+        m_bestAo5Time = m_currentAo5Time;
+    }
 
+    m_bestAo5->setText("Best Ao5: " + QString::number(m_bestAo5Time, 'f', 3));
 }
 
 
