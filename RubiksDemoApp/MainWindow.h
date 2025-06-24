@@ -10,6 +10,7 @@
 #include <QPushButton>
 #include <QColor>
 #include <QColorDialog>
+#include <qgridlayout.h>
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -28,31 +29,55 @@ private slots:
     void openSettingsDialog();
 
 private:
+    // scramble logic
     QString generateScramble(int length);
+    QVector<QString> m_scramblesVec;
+    int m_currentScrambleIndex = -1;
+
+    double m_currentSolveTime = 0.000;
+    double m_bestSolveTime = 0.000;
+    double m_currentAo5Time = 0.000;
+    double m_bestAo5Time = 0.000;
+    QVector<double> solvesVec;
 
     // main stopwatch
-    QElapsedTimer   m_elapsed;
+    QElapsedTimer m_elapsed;
     QTimer* m_update;
-    bool            m_running;
+    bool m_running;
 
     // hold-to-start logic
-    QElapsedTimer   m_holdTimer;
-    bool            m_holdActive;
-    int             m_timerValue = 1000;
+    QElapsedTimer m_holdTimer;
+    bool m_holdActive;
+    int m_timerValue = 1000;
 
     // UI
     QLabel* m_scrambleLabel;
-    QLabel* m_label;
+    QLabel* m_timerLabel;
     QLabel* m_instructionLabel;
     QTableWidget* m_table;
 
+    //statistics
+    QVBoxLayout* m_statisticLayout;
+    QLabel* m_bestSolve;
+    QLabel* m_currentAo5;
+    QLabel* m_bestAo5;
+
     QPushButton* cubeButton;
     QPushButton* settingsButton;
+    QPushButton* prevScrambleButton;
+    QPushButton* nextScrambleButton;
 
     CubeGLWidget* m_glWidget;
     QColor m_backgroundColor = QColor(Qt::white);
 
+    void prevScramble();
+    void nextScramble();
+
     void scrambleCube(CubeGLWidget& cube);
+
+    void calcBestSolve();
+    void calcCurrentAo5();
+    void calcBestAo5();
 };
 
 #endif 
