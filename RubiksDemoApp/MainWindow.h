@@ -11,6 +11,7 @@
 #include <QColor>
 #include <QColorDialog>
 #include <qgridlayout.h>
+#include <iostream>
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -35,12 +36,6 @@ private:
     QVector<QString> m_scramblesVec;
     int m_currentScrambleIndex = -1;
 
-    double m_currentSolveTime = 0.000;
-    double m_bestSolveTime = 0.000;
-    double m_currentAo5Time = 0.000;
-    double m_bestAo5Time = 0.000;
-    QVector<double> solvesVec;
-
     // main stopwatch
     QElapsedTimer m_elapsed;
     QTimer* m_update;
@@ -56,14 +51,22 @@ private:
     QLabel* m_timerLabel;
     QLabel* m_instructionLabel;
     QTableWidget* m_table;
+    int rowIdx = -1;
 
-    //statistics
+    // statistics
     QVBoxLayout* m_statisticLayout;
     QLabel* m_bestSolve;
     QLabel* m_currentAo5;
     QLabel* m_bestAo5;
+    double m_currentSolveTime = 0.000;
+    double m_bestSolveTime = 0.000;
+    double m_currentAo5Time = 0.000;
+    double m_bestAo5Time = 0.000;
+    QVector<double> solvesVec;
 
-    QPushButton* penaltyButton;
+    // penalty logic
+    QMap<int, QPushButton*> penaltyMap;
+
     QPushButton* cubeButton;
     QPushButton* settingsButton;
     QPushButton* prevScrambleButton;

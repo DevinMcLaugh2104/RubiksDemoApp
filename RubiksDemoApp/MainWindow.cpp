@@ -56,8 +56,8 @@ MainWindow::MainWindow(QWidget* parent)
     timerBox->setFixedSize(500, 300);
 
     m_table = new QTableWidget(this);
-    m_table->setColumnCount(2);
-    m_table->setHorizontalHeaderLabels({ "#", "Time (s)"});
+    m_table->setColumnCount(3);
+    m_table->setHorizontalHeaderLabels({ "#", "Time (s)", "Penalty"});
     m_table->setMaximumWidth(300);
     m_table->horizontalHeader()->setStretchLastSection(true);
     m_table->verticalHeader()->setVisible(false);
@@ -91,15 +91,12 @@ MainWindow::MainWindow(QWidget* parent)
     outerLayout->addLayout(m_statisticLayout);
     outerLayout->addLayout(contentLay);
 
-    penaltyButton = new QPushButton("Penalty Options", this);
     cubeButton = new QPushButton("Open Cube", this);
     settingsButton = new QPushButton("Settings", this);
 
-    outerLayout->addWidget(penaltyButton);
     outerLayout->addWidget(cubeButton);
     outerLayout->addWidget(settingsButton);
 
-    connect(penaltyButton, &QPushButton::clicked, this, &MainWindow::openPenaltyDialog);
     connect(cubeButton, &QPushButton::clicked, this, &MainWindow::onShowCube);
     connect(settingsButton, &QPushButton::clicked, this, &MainWindow::openSettingsDialog);
     connect(prevScrambleButton, &QPushButton::clicked, this, &MainWindow::prevScramble);
@@ -157,6 +154,10 @@ bool MainWindow::eventFilter(QObject* obj, QEvent* event)
                 auto* timeItem = new QTableWidgetItem(QString::asprintf("%.3f", secs));
                 timeItem->setTextAlignment(Qt::AlignCenter);
                 m_table->setItem(row, 1, timeItem);
+
+                QPushButton* penaltyButton = new QPushButton("Penalty");
+                m_table->setCellWidget(row, 2, penaltyButton);
+                connect(penaltyButton, &QPushButton::clicked, this, &MainWindow::openPenaltyDialog);
 
                 m_timerLabel->setText(timeItem->text() + " s");
 
@@ -281,8 +282,12 @@ void MainWindow::onShowCube()
 void MainWindow::openPenaltyDialog() {
     PenaltyDialog dialog(this);
     if (dialog.exec() == QDialog::Accepted) {
-
-    }
+        if (dialog.add2SecBtn) {
+            solvesVec[this->rowIdx] = solvesVec[this->rowIdx] + 2.000;
+            this->update();
+            close();
+        }
+    }        
 }
 
 void MainWindow::openSettingsDialog() {
