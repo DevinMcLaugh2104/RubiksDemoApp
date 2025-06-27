@@ -3,20 +3,17 @@
 #include <QPushButton>
 #include <QVBoxLayout>
 
-class PenaltyDialog :  public QDialog
-{
+class PenaltyDialog : public QDialog {
+    Q_OBJECT
 public:
-	explicit PenaltyDialog(QWidget* parent);
+    explicit PenaltyDialog(QWidget* parent = nullptr);
 
-	QPushButton* removePenaltyBtn;
-	QPushButton* add2SecBtn;
-	QPushButton* addDNFBtn;
+    enum PenaltyType { None, Plus2, DNF };
+    PenaltyType selectedPenalty = None;
 
-	void removePenalty(QVector<double> param);
-	void add2SecPenalty(QVector<double> param);
-	void addDNFPenalty(QVector<double> param);
-
-private:
-
+    QPushButton* removePenaltyBtn;
+    QPushButton* add2SecBtn;
+    QPushButton* addDNFBtn;
 };
+
 

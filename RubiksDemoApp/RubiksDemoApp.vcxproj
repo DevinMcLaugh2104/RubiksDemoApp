@@ -32,7 +32,7 @@
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="LoginDialog.h" />
-    <ClInclude Include="PenaltyDialog.h" />
+    <QtMoc Include="PenaltyDialog.h" />
     <ClInclude Include="PLLCases.h" />
     <ClInclude Include="RubiksCube.h" />
     <ClInclude Include="SettingsDialog.h" />

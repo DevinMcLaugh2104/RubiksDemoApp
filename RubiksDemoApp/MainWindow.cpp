@@ -3,7 +3,7 @@
 #include "CubeGLWidget.h"
 #include "PenaltyDialog.h"
 #include "SettingsDialog.h"
-#include <QApplication>
+#include <QApplication>rrvba3
 #include <QEvent>
 #include <QKeyEvent>
 #include <QHBoxLayout>
@@ -133,7 +133,7 @@ bool MainWindow::eventFilter(QObject* obj, QEvent* event)
                     m_update->start();
                     m_running = true;
                     m_timerLabel->setText("0.000");
-                    m_timerLabel->setStyleSheet("font-size: 80px; font-weight: bold; ");
+                    m_timerLabel->setStyleSheet("font-size: 80px; font-weight: bold;");
                     m_instructionLabel->hide();
                 }
             }
@@ -142,32 +142,21 @@ bool MainWindow::eventFilter(QObject* obj, QEvent* event)
                 m_running = false;
                 double secs = m_elapsed.elapsed() / 1000.0;
                 m_currentSolveTime = secs;
-                solvesVec.push_back(secs);
+                solvesVec.push_back(secs); 
+                solvesVecRawData.push_back(secs);
 
-                int row = m_table->rowCount();
-                m_table->insertRow(row);
+                rewriteTable(); 
 
-                auto* idxItem = new QTableWidgetItem(QString::number(row + 1));
-                idxItem->setTextAlignment(Qt::AlignCenter);
-                m_table->setItem(row, 0, idxItem);
+                m_timerLabel->setText(QString::asprintf("%.3f s", secs));
 
-                auto* timeItem = new QTableWidgetItem(QString::asprintf("%.3f", secs));
-                timeItem->setTextAlignment(Qt::AlignCenter);
-                m_table->setItem(row, 1, timeItem);
-
-                QPushButton* penaltyButton = new QPushButton("Penalty");
-                m_table->setCellWidget(row, 2, penaltyButton);
-                connect(penaltyButton, &QPushButton::clicked, this, &MainWindow::openPenaltyDialog);
-
-                m_timerLabel->setText(timeItem->text() + " s");
-
-                if (m_currentScrambleIndex < m_scramblesVec.size() - 1) {
+                if (m_currentScrambleIndex < m_scramblesVec.size() - 1)
                     m_scramblesVec.resize(m_currentScrambleIndex + 1);
-                }
+
                 QString newScramble = generateScramble(20);
                 m_scramblesVec.push_back(newScramble);
                 m_currentScrambleIndex = m_scramblesVec.size() - 1;
                 m_scrambleLabel->setText(newScramble);
+
                 calcBestSolve();
                 calcCurrentAo5();
                 calcBestAo5();
@@ -176,16 +165,14 @@ bool MainWindow::eventFilter(QObject* obj, QEvent* event)
             return true;
         }
     }
+
     return QMainWindow::eventFilter(obj, event);
 }
 
-// ───── Orientation helper ───────────────────────────────────────────────
-// Returns which original cube axis currently points “up” ( +Y in world )
 enum Axis { AxPosX, AxNegX, AxPosY, AxNegY, AxPosZ, AxNegZ };
 
 static Axis detectTopAxis(float xDeg, float yDeg)
 {
-    // build same rotation as view (X then Y), invert to map cube→world
     QMatrix4x4 R;
     R.rotate(xDeg, 1, 0, 0);
     R.rotate(yDeg, 0, 1, 0);
@@ -199,7 +186,7 @@ static Axis detectTopAxis(float xDeg, float yDeg)
     } };
 
     Axis bestA = AxPosY;
-    float best = -2;                  // min dot=-1
+    float best = -2;                 
     for (auto& t : axes) {
         float d = QVector3D::dotProduct(inv.map(t.v), QVector3D(0, 1, 0));
         if (d > best) {
@@ -279,16 +266,31 @@ void MainWindow::onShowCube()
     cw->show();
 }
 
-void MainWindow::openPenaltyDialog() {
+void MainWindow::openPenaltyDialog(int index) {
     PenaltyDialog dialog(this);
     if (dialog.exec() == QDialog::Accepted) {
-        if (dialog.add2SecBtn) {
-            solvesVec[this->rowIdx] = solvesVec[this->rowIdx] + 2.000;
-            this->update();
-            close();
+        switch (dialog.selectedPenalty) {
+        case PenaltyDialog::Plus2:
+            solvesVec[index] += 2.000;
+            break;
+        case PenaltyDialog::DNF:
+            solvesVec[index] = 0.000;
+            break;
+        case PenaltyDialog::None:
+            solvesVec[index] = solvesVecRawData[index];
+            break;
+        default:
+            break;
         }
-    }        
+
+        rewriteTable();
+        calcBestSolve();
+        calcCurrentAo5();
+        calcBestAo5();
+    }
 }
+
+
 
 void MainWindow::openSettingsDialog() {
     SettingsDialog dialog(m_timerValue, m_backgroundColor, this);
@@ -411,74 +413,67 @@ void MainWindow::calcBestSolve() {
 }
 
 void MainWindow::calcCurrentAo5() {
-
     double fastestTime;
     double slowestTime;
-    int fastestIdx = 0;
-    int slowestIdx = 0;
+    int fastestIdx = -1;
+    int slowestIdx = -1;
     QVector<double> tempVec = solvesVec;
-    
-    if (tempVec.size() == 5) {
-        fastestTime = tempVec[0];
-        slowestTime = tempVec[0];
 
-        for (int i = 0; i < tempVec.size(); i++) {
-            if (tempVec[i] < fastestTime) {
+    if (tempVec.size() == 5 || tempVec.size() == 6) {
+        if (tempVec.size() == 6) {
+            solvesVec.removeAt(0);
+            tempVec.removeAt(0);
+        }
+
+        int dnfCount = 0;
+        for (double time : tempVec)
+            if (time == 0.000)
+                dnfCount++;
+
+        if (dnfCount >= 2) {
+            m_currentAo5Time = 0.000;
+            m_currentAo5->setText("Current Ao5: DNF");
+            if (m_bestAo5Time == 0.000)
+                m_bestAo5->setText("Best Ao5: DNF");
+            return;
+        }
+
+        fastestTime = std::numeric_limits<double>::max();
+        for (int i = 0; i < tempVec.size(); ++i) {
+            if (tempVec[i] != 0.000 && tempVec[i] < fastestTime) {
                 fastestTime = tempVec[i];
                 fastestIdx = i;
             }
         }
 
-        tempVec.removeAt(fastestIdx);
-
-        for (int i = 0; i < tempVec.size(); i++) {
-            if (tempVec[i] > slowestTime) {
+        slowestTime = -1.0;
+        for (int i = 0; i < tempVec.size(); ++i) {
+            if (tempVec[i] == 0.000 || tempVec[i] > slowestTime) {
                 slowestTime = tempVec[i];
                 slowestIdx = i;
             }
         }
 
-        tempVec.removeAt(slowestIdx);
-
-        double average = ((tempVec[0] + tempVec[1] + tempVec[2]) / 3);
-
-        m_currentAo5Time = average;
-        m_currentAo5->setText("Current Ao5: " + QString::number(m_currentAo5Time, 'f', 3));
-
-        tempVec.clear();
-    }
-
-    if (tempVec.size() == 6) {
-        solvesVec.removeAt(0);
-        tempVec.removeAt(0);
-
-        fastestTime = tempVec[0];
-        slowestTime = tempVec[0];
-
-        for (int i = 0; i < tempVec.size(); i++) {
-            if (tempVec[i] < fastestTime) {
-                fastestTime = tempVec[i];
-                fastestIdx = i;
-            }
+        if (fastestIdx == -1 || slowestIdx == -1 || fastestIdx == slowestIdx) {
+            m_currentAo5Time = 0.000;
+            m_currentAo5->setText("Current Ao5: DNF");
+            if (m_bestAo5Time == 0.000)
+                m_bestAo5->setText("Best Ao5: DNF");
+            return;
         }
 
-        tempVec.removeAt(fastestIdx);
+        tempVec.removeAt(std::max(fastestIdx, slowestIdx));
+        tempVec.removeAt(std::min(fastestIdx, slowestIdx));
 
-        for (int i = 0; i < tempVec.size(); i++) {
-            if (tempVec[i] > slowestTime) {
-                slowestTime = tempVec[i];
-                slowestIdx = i;
-            }
-        }
+        double sum = 0.0;
+        for (double t : tempVec)
+            sum += t;
 
-        tempVec.removeAt(slowestIdx);
-
-        double average = ((tempVec[0] + tempVec[1] + tempVec[2]) / 3);
-
+        double average = sum / 3.0;
         m_currentAo5Time = average;
-        m_currentAo5->setText("Current Ao5: " + QString::number(m_currentAo5Time, 'f', 3));
+        m_currentAo5->setText("Current Ao5: " + QString::number(average, 'f', 3));
 
-        tempVec.clear();
+        calcBestAo5();
     }
 }
 
@@ -494,4 +489,27 @@ void MainWindow::calcBestAo5() {
     m_bestAo5->setText("Best Ao5: " + QString::number(m_bestAo5Time, 'f', 3));
 }
 
+void MainWindow::rewriteTable() {
+    m_table->setRowCount(0); // Clear old rows
 
+    for (int i = 0; i < solvesVec.size(); ++i) {
+        m_table->insertRow(i);
+
+        auto* idxItem = new QTableWidgetItem(QString::number(i + 1));
+        idxItem->setTextAlignment(Qt::AlignCenter);
+        m_table->setItem(i, 0, idxItem);
+
+        QString displayTime = (solvesVec[i] == 0.000) ? "DNF" : QString::asprintf("%.3f", solvesVec[i]);
+        auto* timeItem = new QTableWidgetItem(displayTime);
+        timeItem->setTextAlignment(Qt::AlignCenter);
+        m_table->setItem(i, 1, timeItem);
+
+        QPushButton* penaltyButton = new QPushButton("Penalty");
+        m_table->setCellWidget(i, 2, penaltyButton);
+
+        // Use lambda to capture 'i'
+        connect(penaltyButton, &QPushButton::clicked, this, [this, i]() {
+            openPenaltyDialog(i);
+            });
+    }
+}

@@ -27,8 +27,9 @@ protected:
 private slots:
     void onUpdateTimer();
     void onShowCube();
-    void openPenaltyDialog();
+    void openPenaltyDialog(int index);
     void openSettingsDialog(); 
+    void rewriteTable();
 
 private:
     // scramble logic
@@ -63,9 +64,10 @@ private:
     double m_currentAo5Time = 0.000;
     double m_bestAo5Time = 0.000;
     QVector<double> solvesVec;
+    QVector<double> solvesVecRawData;
 
     // penalty logic
-    QMap<int, QPushButton*> penaltyMap;
+    int penaltyIdx = -1;
 
     QPushButton* cubeButton;
     QPushButton* settingsButton;

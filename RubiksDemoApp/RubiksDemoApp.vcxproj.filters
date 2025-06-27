@@ -64,6 +64,9 @@
     <QtMoc Include="LoginDialog.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="PenaltyDialog.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="PLLCases.h">
@@ -73,9 +76,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="RubiksCube.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="PenaltyDialog.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
