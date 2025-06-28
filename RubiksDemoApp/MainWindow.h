@@ -85,6 +85,9 @@ private:
     void calcBestSolve();
     void calcCurrentAo5();
     void calcBestAo5();
+    void updateBestSolve();
+    void updateCurrentAo5();
+    void updateBestAo5();
 };
 
 #endif 

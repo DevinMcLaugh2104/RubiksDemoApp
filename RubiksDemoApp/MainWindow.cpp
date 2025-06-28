@@ -58,7 +58,7 @@ MainWindow::MainWindow(QWidget* parent)
     m_table = new QTableWidget(this);
     m_table->setColumnCount(3);
     m_table->setHorizontalHeaderLabels({ "#", "Time (s)", "Penalty"});
-    m_table->setMaximumWidth(300);
+    m_table->setMaximumWidth(320);
     m_table->horizontalHeader()->setStretchLastSection(true);
     m_table->verticalHeader()->setVisible(false);
     m_table->setEditTriggers(QAbstractItemView::NoEditTriggers);
@@ -197,19 +197,16 @@ static Axis detectTopAxis(float xDeg, float yDeg)
     return bestA;
 }
 
-// ───── show CubeWindow with grid-layout buttons ─────────────────────────
 void MainWindow::onShowCube()
 {
     auto* cw = new CubeWindow(nullptr);
     cw->setAttribute(Qt::WA_DeleteOnClose);
 
-    // central widget & layouts
     auto* cWidget = new QWidget(cw);
     auto* rootLay = new QVBoxLayout(cWidget);
     auto* btnGrid = new QGridLayout;
     auto* cubeW = new CubeGLWidget(cWidget);
 
-    // helper to map “U” press based on orientation
     auto doUPressed = [cubeW, this] {
         Axis top = detectTopAxis(cubeW->xRotation(), cubeW->yRotation());
         switch (top) {
@@ -271,6 +268,9 @@ void MainWindow::openPenaltyDialog(int index) {
     if (dialog.exec() == QDialog::Accepted) {
         switch (dialog.selectedPenalty) {
         case PenaltyDialog::Plus2:
+            if (solvesVec[index] != solvesVecRawData[index]) {
+                break;
+            }
             solvesVec[index] += 2.000;
             break;
         case PenaltyDialog::DNF:
@@ -284,7 +284,7 @@ void MainWindow::openPenaltyDialog(int index) {
         }
 
         rewriteTable();
-        calcBestSolve();
+        updateBestSolve();
         calcCurrentAo5();
         calcBestAo5();
     }
@@ -512,4 +512,25 @@ void MainWindow::rewriteTable() {
             openPenaltyDialog(i);
             });
     }
+}
+
+void MainWindow::updateBestSolve() {
+    double currentBestSolve = solvesVec[0];
+
+    for (int i = 0; i < solvesVec.size(); i++) {
+        if (solvesVec[i] < currentBestSolve) {
+            currentBestSolve = solvesVec[i];
+        }
+    }
+
+    m_bestSolveTime = currentBestSolve;
+    m_bestSolve->setText("Best Solve: " + QString::number(m_bestSolveTime, 'f', 3));
+}
+
+void MainWindow::updateCurrentAo5() {
+
+}
+
+void MainWindow::updateBestAo5() {
+
 }
