@@ -518,7 +518,7 @@ void MainWindow::updateBestSolve() {
     double currentBestSolve = solvesVec[0];
 
     for (int i = 0; i < solvesVec.size(); i++) {
-        if (solvesVec[i] < currentBestSolve) {
+        if (solvesVec[i] < currentBestSolve && solvesVec[i] != 0.000) {
             currentBestSolve = solvesVec[i];
         }
     }
