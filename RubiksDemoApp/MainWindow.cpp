@@ -490,7 +490,7 @@ void MainWindow::calcBestAo5() {
 }
 
 void MainWindow::rewriteTable() {
-    m_table->setRowCount(0); // Clear old rows
+    m_table->setRowCount(0); 
 
     for (int i = 0; i < solvesVec.size(); ++i) {
         m_table->insertRow(i);
@@ -507,7 +507,6 @@ void MainWindow::rewriteTable() {
         QPushButton* penaltyButton = new QPushButton("Penalty");
         m_table->setCellWidget(i, 2, penaltyButton);
 
-        // Use lambda to capture 'i'
         connect(penaltyButton, &QPushButton::clicked, this, [this, i]() {
             openPenaltyDialog(i);
             });

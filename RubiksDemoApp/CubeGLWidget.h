@@ -37,7 +37,6 @@ public slots:
     void moveBackLayerPrime();
     void moveBackLayer2();
 
-    void syncCubeOrientation();
     void resetCube();
 
     float xRotation() const { return m_xRot; }
