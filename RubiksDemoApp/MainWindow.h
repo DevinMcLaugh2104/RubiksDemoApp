@@ -1,7 +1,6 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include "CubeGLWidget.h"
 #include <QMainWindow>
 #include <QElapsedTimer>
 #include <QTimer>
@@ -12,6 +11,7 @@
 #include <QColorDialog>
 #include <qgridlayout.h>
 #include <iostream>
+#include "CubeGLWidget.h"
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -51,7 +51,7 @@ private:
     QLabel*       m_scrambleLabel;
     QLabel*       m_timerLabel;
     QLabel*       m_instructionLabel;
-    QTableWidget* m_table;
+    QTableWidget* m_solvesTable;
     QPushButton*  clearListButton;
     int           rowIdx = -1;
 
@@ -75,6 +75,8 @@ private:
     QPushButton* settingsButton;
     QPushButton* prevScrambleButton;
     QPushButton* nextScrambleButton;
+    QPushButton* startTimerBtn;
+    QPushButton* stopTimerBtn;
 
     CubeGLWidget* m_glWidget;
     QColor        m_backgroundColor = QColor(Qt::white);
@@ -92,6 +94,9 @@ private:
     void updateBestAo5();
 
     void clearSolvesList();
+
+    void startTimer();
+    void stopTimer();
 };
 
 #endif 

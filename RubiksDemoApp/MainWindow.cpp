@@ -55,56 +55,93 @@ MainWindow::MainWindow(QWidget* parent)
     timerBox->setStyleSheet("border: none;");
     timerBox->setFixedSize(500, 300);
 
-    m_table = new QTableWidget(this);
-    m_table->setColumnCount(3);
-    m_table->setHorizontalHeaderLabels({ "#", "Time (s)", "Penalty"});
-    m_table->setMaximumWidth(320);
-    m_table->horizontalHeader()->setStretchLastSection(true);
-    m_table->verticalHeader()->setVisible(false);
-    m_table->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    m_table->setSelectionMode(QAbstractItemView::NoSelection);
+    m_solvesTable = new QTableWidget(this);
+    m_solvesTable->setColumnCount(3);
+    m_solvesTable->setHorizontalHeaderLabels({ "#", "Time (s)", "Penalty" });
+    m_solvesTable->setFixedWidth(320);
+    m_solvesTable->setFixedHeight(1200);
+    m_solvesTable->horizontalHeader()->setStretchLastSection(true);
+    m_solvesTable->verticalHeader()->setVisible(false);
+    m_solvesTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    m_solvesTable->setSelectionMode(QAbstractItemView::NoSelection);
 
     clearListButton = new QPushButton("Clear List", this);
-    clearListButton->setMaximumWidth(320);
+    clearListButton->setFixedWidth(320);
 
     m_tableLayout = new QVBoxLayout;
-    m_tableLayout->addWidget(m_table);
+    m_tableLayout->addWidget(m_solvesTable);
     m_tableLayout->addWidget(clearListButton);
+    m_tableLayout->setContentsMargins(0, 0, 0, 0);
+    m_tableLayout->setSpacing(0);
 
     auto* tableContainer = new QWidget(this);
     tableContainer->setLayout(m_tableLayout);
+    tableContainer->setFixedWidth(320);
+    tableContainer->setFixedHeight(1200);
+
+    auto* tableWrapperLayout = new QVBoxLayout;
+    tableWrapperLayout->addWidget(tableContainer, 0, Qt::AlignTop);
+    tableWrapperLayout->addStretch();
+    tableWrapperLayout->setContentsMargins(0, 0, 0, 0);
+
+    auto* tableWrapper = new QWidget(this);
+    tableWrapper->setLayout(tableWrapperLayout);
 
     m_statisticLayout = new QVBoxLayout;
+    QFont statisticsFont("Sans-Serif");
+    statisticsFont.setPointSize(20);
+
     m_bestSolve = new QLabel("Best Solve: " + QString::number(m_bestSolveTime, 'f', 3));
     m_bestAo5 = new QLabel("Best Ao5: " + QString::number(m_bestAo5Time, 'f', 3));
     m_currentAo5 = new QLabel("Current Ao5: " + QString::number(m_currentAo5Time, 'f', 3));
 
+    m_bestSolve->setFont(statisticsFont);
+    m_bestAo5->setFont(statisticsFont);
+    m_currentAo5->setFont(statisticsFont);
+
     m_statisticLayout->addWidget(m_bestSolve);
     m_statisticLayout->addWidget(m_bestAo5);
     m_statisticLayout->addWidget(m_currentAo5);
+    m_statisticLayout->setContentsMargins(0, 0, 0, 0);
+    m_statisticLayout->setSpacing(0);
+
+    auto* statsContainer = new QWidget(this);
+    statsContainer->setLayout(m_statisticLayout);
+    statsContainer->setFixedWidth(320);
+    statsContainer->setFixedHeight(120);
+    statsContainer->setStyleSheet("background-color: rgba(255, 255, 255, 180);");
+
+    auto* statsWrapperLayout = new QVBoxLayout;
+    statsWrapperLayout->addWidget(statsContainer, 0, Qt::AlignTop);
+    statsWrapperLayout->addStretch();
+    statsWrapperLayout->setContentsMargins(0, 0, 0, 0);
+
+    auto* statsWrapper = new QWidget(this);
+    statsWrapper->setLayout(statsWrapperLayout);
 
     auto* central = new QWidget(this);
     auto* outerLayout = new QVBoxLayout(central);
     auto* contentLay = new QHBoxLayout;
 
-    contentLay->addWidget(tableContainer);
-    contentLay->addStretch();             
-    contentLay->addWidget(timerBox);      
-    contentLay->addStretch();             
+    contentLay->addWidget(tableWrapper);
+    contentLay->addStretch();
+    contentLay->addWidget(timerBox);
+    contentLay->addStretch();
+    contentLay->addWidget(statsWrapper);
 
     outerLayout->addWidget(m_scrambleLabel);
+
     auto* scrambleNavLayout = new QHBoxLayout;
     prevScrambleButton = new QPushButton("Previous Scramble", this);
     nextScrambleButton = new QPushButton("Next Scramble", this);
     scrambleNavLayout->addWidget(prevScrambleButton);
     scrambleNavLayout->addWidget(nextScrambleButton);
     outerLayout->addLayout(scrambleNavLayout);
-    outerLayout->addLayout(m_statisticLayout);
+
     outerLayout->addLayout(contentLay);
 
     cubeButton = new QPushButton("Open Cube", this);
     settingsButton = new QPushButton("Settings", this);
-
     outerLayout->addWidget(cubeButton);
     outerLayout->addWidget(settingsButton);
 
@@ -115,11 +152,10 @@ MainWindow::MainWindow(QWidget* parent)
     connect(clearListButton, &QPushButton::clicked, this, &MainWindow::clearSolvesList);
 
     setCentralWidget(central);
+
     m_update->setInterval(50);
     connect(m_update, &QTimer::timeout, this, &MainWindow::onUpdateTimer);
-    
 }
-
 
 MainWindow::~MainWindow() = default;
 
@@ -253,7 +289,7 @@ void MainWindow::onShowCube()
         connect(b, &QPushButton::clicked, fn);
         };
 
-    // U / U'
+    // Notations buttons
     addBtn("U", [cubeW] { cubeW->moveUpLayer(); cubeW->update(); }, 0, 0);
     addBtn("U'", [cubeW] { cubeW->moveUpLayerPrime(); cubeW->update(); }, 0, 1);
     addBtn("R", [cubeW] { cubeW->moveRightLayer();  cubeW->update(); }, 1, 0);
@@ -268,6 +304,15 @@ void MainWindow::onShowCube()
     addBtn("B'", [cubeW] { cubeW->moveBackLayerPrime(); cubeW->update(); }, 5, 1);
     addBtn("Scramble Cube", [cubeW,this] { scrambleCube(*cubeW); cubeW->update(); }, 6, 0);
     addBtn("Reset Cube", [cubeW] { cubeW->resetCube(); cubeW->update(); }, 6, 1);
+
+    startTimerBtn = new QPushButton("Start Timer", this);
+    stopTimerBtn = new QPushButton("Stop Timer", this);
+
+    btnGrid->addWidget(startTimerBtn, 7, 0);
+    btnGrid->addWidget(stopTimerBtn, 7, 1);
+
+    connect(startTimerBtn, &QPushButton::clicked, this, &MainWindow::startTimer);
+    connect(stopTimerBtn, &QPushButton::clicked, this, &MainWindow::stopTimer);
 
     rootLay->addWidget(cubeW, 1);
     rootLay->addLayout(btnGrid);
@@ -302,8 +347,6 @@ void MainWindow::openPenaltyDialog(int index) {
         calcBestAo5();
     }
 }
-
-
 
 void MainWindow::openSettingsDialog() {
     SettingsDialog dialog(m_timerValue, m_backgroundColor, this);
@@ -348,7 +391,6 @@ QString MainWindow::generateScramble(int length) {
     }
     return scr.join(' ');
 }
-
 
 void MainWindow::onUpdateTimer()
 {
@@ -503,22 +545,22 @@ void MainWindow::calcBestAo5() {
 }
 
 void MainWindow::rewriteTable() {
-    m_table->setRowCount(0); 
+    m_solvesTable->setRowCount(0); 
 
     for (int i = 0; i < solvesVec.size(); ++i) {
-        m_table->insertRow(i);
+        m_solvesTable->insertRow(i);
 
         auto* idxItem = new QTableWidgetItem(QString::number(i + 1));
         idxItem->setTextAlignment(Qt::AlignCenter);
-        m_table->setItem(i, 0, idxItem);
+        m_solvesTable->setItem(i, 0, idxItem);
 
         QString displayTime = (solvesVec[i] == 0.000) ? "DNF" : QString::asprintf("%.3f", solvesVec[i]);
         auto* timeItem = new QTableWidgetItem(displayTime);
         timeItem->setTextAlignment(Qt::AlignCenter);
-        m_table->setItem(i, 1, timeItem);
+        m_solvesTable->setItem(i, 1, timeItem);
 
         QPushButton* penaltyButton = new QPushButton("Penalty");
-        m_table->setCellWidget(i, 2, penaltyButton);
+        m_solvesTable->setCellWidget(i, 2, penaltyButton);
 
         connect(penaltyButton, &QPushButton::clicked, this, [this, i]() {
             openPenaltyDialog(i);
@@ -551,4 +593,44 @@ void MainWindow::clearSolvesList() {
     solvesVec.clear();
     solvesVecRawData.clear();
     rewriteTable();
+    m_timerLabel->setText("0.000");
+}
+
+void MainWindow::startTimer() {
+    if (!m_running) {
+        m_elapsed.restart();
+        m_update->start();
+        m_running = true;
+        m_timerLabel->setText("0.000");
+        m_timerLabel->setStyleSheet("font-size: 80px; font-weight: bold;");
+        m_instructionLabel->hide();
+    }
+}
+
+void MainWindow::stopTimer() {
+    if (m_running) {
+
+        m_update->stop();
+        m_running = false;
+        double secs = m_elapsed.elapsed() / 1000.0;
+        m_currentSolveTime = secs;
+        solvesVec.push_back(secs);
+        solvesVecRawData.push_back(secs);
+
+        rewriteTable();
+
+        m_timerLabel->setText(QString::asprintf("%.3f s", secs));
+
+        if (m_currentScrambleIndex < m_scramblesVec.size() - 1)
+            m_scramblesVec.resize(m_currentScrambleIndex + 1);
+
+        QString newScramble = generateScramble(20);
+        m_scramblesVec.push_back(newScramble);
+        m_currentScrambleIndex = m_scramblesVec.size() - 1;
+        m_scrambleLabel->setText(newScramble);
+
+        calcBestSolve();
+        calcCurrentAo5();
+        calcBestAo5();
+    }
 }
