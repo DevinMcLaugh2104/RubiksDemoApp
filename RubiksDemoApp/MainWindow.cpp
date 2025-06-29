@@ -87,7 +87,10 @@ MainWindow::MainWindow(QWidget* parent)
     auto* tableWrapper = new QWidget(this);
     tableWrapper->setLayout(tableWrapperLayout);
 
-    m_statisticLayout = new QVBoxLayout;
+    cubeButton = new QPushButton("Open Cube", this);
+    settingsButton = new QPushButton("Settings", this);
+
+    m_statsLayout = new QVBoxLayout;
     QFont statisticsFont("Sans-Serif");
     statisticsFont.setPointSize(20);
 
@@ -99,16 +102,19 @@ MainWindow::MainWindow(QWidget* parent)
     m_bestAo5->setFont(statisticsFont);
     m_currentAo5->setFont(statisticsFont);
 
-    m_statisticLayout->addWidget(m_bestSolve);
-    m_statisticLayout->addWidget(m_bestAo5);
-    m_statisticLayout->addWidget(m_currentAo5);
-    m_statisticLayout->setContentsMargins(0, 0, 0, 0);
-    m_statisticLayout->setSpacing(0);
+    m_statsLayout->addWidget(m_bestSolve);
+    m_statsLayout->addWidget(m_bestAo5);
+    m_statsLayout->addWidget(m_currentAo5);
+    m_statsLayout->addWidget(cubeButton);
+    m_statsLayout->addWidget(settingsButton);
+ 
+    m_statsLayout->setContentsMargins(0, 0, 0, 0);
+    m_statsLayout->setSpacing(0);
 
     auto* statsContainer = new QWidget(this);
-    statsContainer->setLayout(m_statisticLayout);
+    statsContainer->setLayout(m_statsLayout);
     statsContainer->setFixedWidth(320);
-    statsContainer->setFixedHeight(120);
+    statsContainer->setFixedHeight(320);
     statsContainer->setStyleSheet("background-color: rgba(255, 255, 255, 180);");
 
     auto* statsWrapperLayout = new QVBoxLayout;
@@ -132,18 +138,24 @@ MainWindow::MainWindow(QWidget* parent)
     outerLayout->addWidget(m_scrambleLabel);
 
     auto* scrambleNavLayout = new QHBoxLayout;
-    prevScrambleButton = new QPushButton("Previous Scramble", this);
+    scrambleNavLayout->setSpacing(8); 
+    scrambleNavLayout->setContentsMargins(0, 0, 0, 0);
+    scrambleNavLayout->setAlignment(Qt::AlignCenter);
+
+    prevScrambleButton = new QPushButton("Prev Scramble", this);
+    prevScrambleButton->setMaximumWidth(120);
     nextScrambleButton = new QPushButton("Next Scramble", this);
+    nextScrambleButton->setMaximumWidth(120);
+
     scrambleNavLayout->addWidget(prevScrambleButton);
     scrambleNavLayout->addWidget(nextScrambleButton);
-    outerLayout->addLayout(scrambleNavLayout);
+
+    auto* scrambleNavContainer = new QWidget(this);
+    scrambleNavContainer->setLayout(scrambleNavLayout);
+
+    outerLayout->addWidget(scrambleNavContainer);
 
     outerLayout->addLayout(contentLay);
-
-    cubeButton = new QPushButton("Open Cube", this);
-    settingsButton = new QPushButton("Settings", this);
-    outerLayout->addWidget(cubeButton);
-    outerLayout->addWidget(settingsButton);
 
     connect(cubeButton, &QPushButton::clicked, this, &MainWindow::onShowCube);
     connect(settingsButton, &QPushButton::clicked, this, &MainWindow::openSettingsDialog);

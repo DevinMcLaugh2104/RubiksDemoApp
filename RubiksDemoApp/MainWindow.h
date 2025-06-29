@@ -56,7 +56,7 @@ private:
     int           rowIdx = -1;
 
     // statistics
-    QVBoxLayout*    m_statisticLayout;
+    QVBoxLayout*    m_statsLayout;
     QVBoxLayout*    m_tableLayout;
     QLabel*         m_bestSolve;
     QLabel*         m_currentAo5;
