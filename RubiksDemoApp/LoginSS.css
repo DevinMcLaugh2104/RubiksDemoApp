@@ -1,0 +1,35 @@
+QDialog {
+    background-image: url(":/new/prefix1/BackgroundImage");
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+QLineEdit {
+    background-color: white;
+    color: black;
+    border: 2px solid black;
+    padding: 4px;
+}
+
+QPushButton {
+    background-color: #f0f0f0;
+    color: black;
+    border: 2px solid black;
+    padding: 4px;
+}
+
+QPushButton:hover {
+    background-color: #e0e0e0;
+    border: 2px solid black;
+}
+
+QPushButton:pressed {
+    background-color: #d0d0d0;
+    border: 2px solid black; 
+
+}
+
+QLabel {
+    background-color: #FFFFFF;
+    border: 2px solid black;
+}

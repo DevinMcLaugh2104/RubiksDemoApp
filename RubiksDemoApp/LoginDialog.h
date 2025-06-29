@@ -6,6 +6,7 @@
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QLabel>
+#include <QFile>
 
 class LoginDialog : public QDialog {
     Q_OBJECT

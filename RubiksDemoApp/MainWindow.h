@@ -35,34 +35,36 @@ private:
     // scramble logic
     QString generateScramble(int length);
     QVector<QString> m_scramblesVec;
-    int m_currentScrambleIndex = -1;
+    int              m_currentScrambleIndex = -1;
 
     // main stopwatch
     QElapsedTimer m_elapsed;
-    QTimer* m_update;
-    bool m_running;
+    QTimer*       m_update;
+    bool          m_running;
 
     // hold-to-start logic
     QElapsedTimer m_holdTimer;
-    bool m_holdActive;
-    int m_timerValue = 1000;
+    bool          m_holdActive;
+    int           m_timerValue = 1000;
 
     // UI
-    QLabel* m_scrambleLabel;
-    QLabel* m_timerLabel;
-    QLabel* m_instructionLabel;
+    QLabel*       m_scrambleLabel;
+    QLabel*       m_timerLabel;
+    QLabel*       m_instructionLabel;
     QTableWidget* m_table;
-    int rowIdx = -1;
+    QPushButton*  clearListButton;
+    int           rowIdx = -1;
 
     // statistics
-    QVBoxLayout* m_statisticLayout;
-    QLabel* m_bestSolve;
-    QLabel* m_currentAo5;
-    QLabel* m_bestAo5;
-    double m_currentSolveTime = 0.000;
-    double m_bestSolveTime = 0.000;
-    double m_currentAo5Time = 0.000;
-    double m_bestAo5Time = 0.000;
+    QVBoxLayout*    m_statisticLayout;
+    QVBoxLayout*    m_tableLayout;
+    QLabel*         m_bestSolve;
+    QLabel*         m_currentAo5;
+    QLabel*         m_bestAo5;
+    double          m_currentSolveTime = 0.000;
+    double          m_bestSolveTime = 0.000;
+    double          m_currentAo5Time = 0.000;
+    double          m_bestAo5Time = 0.000;
     QVector<double> solvesVec;
     QVector<double> solvesVecRawData;
 
@@ -75,7 +77,7 @@ private:
     QPushButton* nextScrambleButton;
 
     CubeGLWidget* m_glWidget;
-    QColor m_backgroundColor = QColor(Qt::white);
+    QColor        m_backgroundColor = QColor(Qt::white);
 
     void prevScramble();
     void nextScramble();
@@ -88,6 +90,8 @@ private:
     void updateBestSolve();
     void updateCurrentAo5();
     void updateBestAo5();
+
+    void clearSolvesList();
 };
 
 #endif 

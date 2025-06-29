@@ -20,6 +20,7 @@
     <ClCompile Include="PLLCases.cpp" />
     <ClCompile Include="RubiksCube.cpp" />
     <ClCompile Include="SettingsDialog.cpp" />
+    <ClCompile Include="ShaderUtils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="MainWindow.h" />
@@ -31,11 +32,20 @@
     <QtMoc Include="CubeWindow.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ShaderUtils.h" />
     <QtMoc Include="LoginDialog.h" />
     <QtMoc Include="PenaltyDialog.h" />
     <ClInclude Include="PLLCases.h" />
     <ClInclude Include="RubiksCube.h" />
     <ClInclude Include="SettingsDialog.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtRcc Include="Resource.qrc" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="cubeFrag.glsl" />
+    <None Include="cubeVert.glsl" />
+    <None Include="LoginSS.css" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{FD846F19-78C6-4095-AEB5-115768BC246C}</ProjectGuid>

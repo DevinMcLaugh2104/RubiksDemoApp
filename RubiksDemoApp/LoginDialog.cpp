@@ -8,42 +8,16 @@ LoginDialog::LoginDialog(QWidget* parent)
     setModal(true);
     setFixedSize(500, 340);
    
-    this->setStyleSheet(R"(
-     QDialog {
-        background-image: url("C:/Users/devin/OneDrive/Pictures/istockphoto-1317247309-612x612.jpg");
-        background-repeat: no-repeat;
-        background-position: center;
-    }
+    QFile file("LoginSS.css"); 
 
-    QLineEdit {
-        background-color: white;
-        color: black;
-        border: 2px solid black;
-        padding: 4px;
+    if (file.open(QFile::ReadOnly | QFile::Text)) {
+        QString styleSheet = QString::fromUtf8(file.readAll());
+        this->setStyleSheet(styleSheet);
+        file.close();
     }
-
-    QPushButton {
-        background-color: #f0f0f0;
-        color: black;
-        border: 2px solid black;
-        padding: 4px;
+    else {
+        qDebug() << "Failed to open stylesheet file";
     }
-
-    QPushButton:hover {
-        background-color: #e0e0e0;
-        border: 2px solid black;
-    }
-
-    QPushButton:pressed {
-        background-color: #d0d0d0;
-        border: 2px solid black;
-    }
-
-    QLabel {
-        background-color: #FFFFFF;
-        border: 2px solid black;
-    }
-)");
 
     auto* layout = new QVBoxLayout(this);
     layout->setAlignment(Qt::AlignCenter); 

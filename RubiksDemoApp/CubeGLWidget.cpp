@@ -1,50 +1,10 @@
 #include "CubeGLWidget.h"
-#include <QOpenGLShader>
-#include <QMouseEvent>
-#include <iostream>
 
-// ---------- Vertex Shader ----------
-static const char* vShader = R"(#version 330 core
-layout(location = 0) in vec3 aPos;
-layout(location = 1) in vec3 aNormal;
+std::string vertexCode = ShaderUtils::loadShaderSource("cubeVert.glsl");
+std::string fragmentCode = ShaderUtils::loadShaderSource("cubeFrag.glsl");
 
-out vec3 vWorldNormal;       // normal AFTER cubie rotation
-flat out vec3 vIdx;          // logical cubie index (debug / pick)
-
-uniform mat4 model, view, projection;
-uniform vec3 cubieIndex;
-
-void main()
-{
-    // model is a pure rigid-body transform so mat3(model) is fine
-    vWorldNormal = mat3(model) * aNormal;
-    vIdx         = cubieIndex;
-    gl_Position  = projection * view * model * vec4(aPos, 1.0);
-})";
-
-// ---------- Fragment Shader ----------
-static const char* fShader = R"(#version 330 core
-in  vec3 vWorldNormal;
-flat in vec3 vIdx;
-out vec4 FragColor;
-
-uniform vec3 faceColors[6];            // UP, DOWN, LEFT, RIGHT, FRONT, BACK
-
-void main()
-{
-    vec3 n   = normalize(vWorldNormal);
-    vec3 col = vec3(0.05);             // default “dark”
-
-    // pick colour based on the *current* outward direction
-    if      (n.y >  0.9) col = faceColors[0]; // UP    (+Y)
-    else if (n.y < -0.9) col = faceColors[1]; // DOWN  (–Y)
-    else if (n.x < -0.9) col = faceColors[2]; // LEFT  (–X)
-    else if (n.x >  0.9) col = faceColors[3]; // RIGHT (+X)
-    else if (n.z >  0.9) col = faceColors[4]; // FRONT (+Z)
-    else if (n.z < -0.9) col = faceColors[5]; // BACK  (–Z)
-
-    FragColor = vec4(col, 1.0);
-})";
+const char* vShader = vertexCode.c_str();
+const char* fShader = fragmentCode.c_str();
 
 // ---------- Cube Geometry ----------
 static const float verts[] = {

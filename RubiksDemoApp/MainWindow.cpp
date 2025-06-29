@@ -64,6 +64,16 @@ MainWindow::MainWindow(QWidget* parent)
     m_table->setEditTriggers(QAbstractItemView::NoEditTriggers);
     m_table->setSelectionMode(QAbstractItemView::NoSelection);
 
+    clearListButton = new QPushButton("Clear List", this);
+    clearListButton->setMaximumWidth(320);
+
+    m_tableLayout = new QVBoxLayout;
+    m_tableLayout->addWidget(m_table);
+    m_tableLayout->addWidget(clearListButton);
+
+    auto* tableContainer = new QWidget(this);
+    tableContainer->setLayout(m_tableLayout);
+
     m_statisticLayout = new QVBoxLayout;
     m_bestSolve = new QLabel("Best Solve: " + QString::number(m_bestSolveTime, 'f', 3));
     m_bestAo5 = new QLabel("Best Ao5: " + QString::number(m_bestAo5Time, 'f', 3));
@@ -76,10 +86,11 @@ MainWindow::MainWindow(QWidget* parent)
     auto* central = new QWidget(this);
     auto* outerLayout = new QVBoxLayout(central);
     auto* contentLay = new QHBoxLayout;
-    contentLay->addWidget(m_table, 1);
-    contentLay->addStretch();
-    contentLay->addWidget(timerBox, 0, Qt::AlignCenter);
-    contentLay->addStretch();
+
+    contentLay->addWidget(tableContainer);
+    contentLay->addStretch();             
+    contentLay->addWidget(timerBox);      
+    contentLay->addStretch();             
 
     outerLayout->addWidget(m_scrambleLabel);
     auto* scrambleNavLayout = new QHBoxLayout;
@@ -101,10 +112,12 @@ MainWindow::MainWindow(QWidget* parent)
     connect(settingsButton, &QPushButton::clicked, this, &MainWindow::openSettingsDialog);
     connect(prevScrambleButton, &QPushButton::clicked, this, &MainWindow::prevScramble);
     connect(nextScrambleButton, &QPushButton::clicked, this, &MainWindow::nextScramble);
+    connect(clearListButton, &QPushButton::clicked, this, &MainWindow::clearSolvesList);
 
     setCentralWidget(central);
     m_update->setInterval(50);
     connect(m_update, &QTimer::timeout, this, &MainWindow::onUpdateTimer);
+    
 }
 
 
@@ -532,4 +545,10 @@ void MainWindow::updateCurrentAo5() {
 
 void MainWindow::updateBestAo5() {
 
+}
+
+void MainWindow::clearSolvesList() {
+    solvesVec.clear();
+    solvesVecRawData.clear();
+    rewriteTable();
 }
