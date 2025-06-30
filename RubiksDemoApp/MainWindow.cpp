@@ -3,7 +3,7 @@
 #include "CubeGLWidget.h"
 #include "PenaltyDialog.h"
 #include "SettingsDialog.h"
-#include <QApplication>rrvba3
+#include <QApplication>
 #include <QEvent>
 #include <QKeyEvent>
 #include <QHBoxLayout>
@@ -98,25 +98,40 @@ MainWindow::MainWindow(QWidget* parent)
     m_bestAo5 = new QLabel("Best Ao5: " + QString::number(m_bestAo5Time, 'f', 3));
     m_currentAo5 = new QLabel("Current Ao5: " + QString::number(m_currentAo5Time, 'f', 3));
 
+    // Set font
     m_bestSolve->setFont(statisticsFont);
     m_bestAo5->setFont(statisticsFont);
     m_currentAo5->setFont(statisticsFont);
 
+    // Center alignment
+    m_bestSolve->setAlignment(Qt::AlignHCenter);
+    m_bestAo5->setAlignment(Qt::AlignHCenter);
+    m_currentAo5->setAlignment(Qt::AlignHCenter);
+
+    // Add widgets with spacing
     m_statsLayout->addWidget(m_bestSolve);
     m_statsLayout->addWidget(m_bestAo5);
     m_statsLayout->addWidget(m_currentAo5);
+
+    // Add space before buttons
+    m_statsLayout->addSpacing(10);
+
     m_statsLayout->addWidget(cubeButton);
     m_statsLayout->addWidget(settingsButton);
- 
-    m_statsLayout->setContentsMargins(0, 0, 0, 0);
-    m_statsLayout->setSpacing(0);
 
+    // Improve spacing between all items slightly
+    m_statsLayout->setSpacing(5);
+    m_statsLayout->setContentsMargins(0, 0, 0, 0);
+
+    // Container with padding and translucent background
     auto* statsContainer = new QWidget(this);
     statsContainer->setLayout(m_statsLayout);
     statsContainer->setFixedWidth(320);
     statsContainer->setFixedHeight(320);
+    statsContainer->setContentsMargins(10, 10, 10, 10); 
     statsContainer->setStyleSheet("background-color: rgba(255, 255, 255, 180);");
 
+    // Wrapper to align container to top
     auto* statsWrapperLayout = new QVBoxLayout;
     statsWrapperLayout->addWidget(statsContainer, 0, Qt::AlignTop);
     statsWrapperLayout->addStretch();
@@ -124,6 +139,7 @@ MainWindow::MainWindow(QWidget* parent)
 
     auto* statsWrapper = new QWidget(this);
     statsWrapper->setLayout(statsWrapperLayout);
+
 
     auto* central = new QWidget(this);
     auto* outerLayout = new QVBoxLayout(central);
