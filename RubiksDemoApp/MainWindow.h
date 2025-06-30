@@ -1,7 +1,6 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include "CubeGLWidget.h"
 #include <QMainWindow>
 #include <QElapsedTimer>
 #include <QTimer>
@@ -11,6 +10,8 @@
 #include <QColor>
 #include <QColorDialog>
 #include <qgridlayout.h>
+#include <iostream>
+#include "CubeGLWidget.h"
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -26,49 +27,59 @@ protected:
 private slots:
     void onUpdateTimer();
     void onShowCube();
-    void openSettingsDialog();
+    void openPenaltyDialog(int index);
+    void openSettingsDialog(); 
+    void rewriteTable();
 
 private:
     // scramble logic
     QString generateScramble(int length);
     QVector<QString> m_scramblesVec;
-    int m_currentScrambleIndex = -1;
-
-    double m_currentSolveTime = 0.000;
-    double m_bestSolveTime = 0.000;
-    double m_currentAo5Time = 0.000;
-    double m_bestAo5Time = 0.000;
-    QVector<double> solvesVec;
+    int              m_currentScrambleIndex = -1;
 
     // main stopwatch
     QElapsedTimer m_elapsed;
-    QTimer* m_update;
-    bool m_running;
+    QTimer*       m_update;
+    bool          m_running;
 
     // hold-to-start logic
     QElapsedTimer m_holdTimer;
-    bool m_holdActive;
-    int m_timerValue = 1000;
+    bool          m_holdActive;
+    int           m_timerValue = 1000;
 
     // UI
-    QLabel* m_scrambleLabel;
-    QLabel* m_timerLabel;
-    QLabel* m_instructionLabel;
-    QTableWidget* m_table;
+    QLabel*       m_scrambleLabel;
+    QLabel*       m_timerLabel;
+    QLabel*       m_instructionLabel;
+    QTableWidget* m_solvesTable;
+    QPushButton*  clearListButton;
+    int           rowIdx = -1;
 
-    //statistics
-    QVBoxLayout* m_statisticLayout;
-    QLabel* m_bestSolve;
-    QLabel* m_currentAo5;
-    QLabel* m_bestAo5;
+    // statistics
+    QVBoxLayout*    m_statsLayout;
+    QVBoxLayout*    m_tableLayout;
+    QLabel*         m_bestSolve;
+    QLabel*         m_currentAo5;
+    QLabel*         m_bestAo5;
+    double          m_currentSolveTime = 0.000;
+    double          m_bestSolveTime = 0.000;
+    double          m_currentAo5Time = 0.000;
+    double          m_bestAo5Time = 0.000;
+    QVector<double> solvesVec;
+    QVector<double> solvesVecRawData;
+
+    // penalty logic
+    int penaltyIdx = -1;
 
     QPushButton* cubeButton;
     QPushButton* settingsButton;
     QPushButton* prevScrambleButton;
     QPushButton* nextScrambleButton;
+    QPushButton* startTimerBtn;
+    QPushButton* stopTimerBtn;
 
     CubeGLWidget* m_glWidget;
-    QColor m_backgroundColor = QColor(Qt::white);
+    QColor        m_backgroundColor = QColor(Qt::white);
 
     void prevScramble();
     void nextScramble();
@@ -78,6 +89,14 @@ private:
     void calcBestSolve();
     void calcCurrentAo5();
     void calcBestAo5();
+    void updateBestSolve();
+    void updateCurrentAo5();
+    void updateBestAo5();
+
+    void clearSolvesList();
+
+    void startTimer();
+    void stopTimer();
 };
 
 #endif 

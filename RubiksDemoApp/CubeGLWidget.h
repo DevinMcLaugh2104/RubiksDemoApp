@@ -6,7 +6,13 @@
 #include <QOpenGLShaderProgram>
 #include <QMatrix4x4>
 #include <QMouseEvent>
-#include "RubiksCube.h"           
+#include <fstream>
+#include <sstream>
+#include <string>
+#include <QOpenGLShader>
+#include <iostream>
+#include "RubiksCube.h"  
+#include "ShaderUtils.h"
 
 class CubeGLWidget : public QOpenGLWidget,
     protected QOpenGLFunctions_3_3_Core
@@ -37,7 +43,6 @@ public slots:
     void moveBackLayerPrime();
     void moveBackLayer2();
 
-    void syncCubeOrientation();
     void resetCube();
 
     float xRotation() const { return m_xRot; }

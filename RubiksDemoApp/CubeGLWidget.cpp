@@ -1,50 +1,10 @@
 #include "CubeGLWidget.h"
-#include <QOpenGLShader>
-#include <QMouseEvent>
-#include <iostream>
 
-// ---------- Vertex Shader ----------
-static const char* vShader = R"(#version 330 core
-layout(location = 0) in vec3 aPos;
-layout(location = 1) in vec3 aNormal;
+std::string vertexCode = ShaderUtils::loadShaderSource("cubeVert.glsl");
+std::string fragmentCode = ShaderUtils::loadShaderSource("cubeFrag.glsl");
 
-out vec3 vWorldNormal;       // normal AFTER cubie rotation
-flat out vec3 vIdx;          // logical cubie index (debug / pick)
-
-uniform mat4 model, view, projection;
-uniform vec3 cubieIndex;
-
-void main()
-{
-    // model is a pure rigid-body transform so mat3(model) is fine
-    vWorldNormal = mat3(model) * aNormal;
-    vIdx         = cubieIndex;
-    gl_Position  = projection * view * model * vec4(aPos, 1.0);
-})";
-
-// ---------- Fragment Shader ----------
-static const char* fShader = R"(#version 330 core
-in  vec3 vWorldNormal;
-flat in vec3 vIdx;
-out vec4 FragColor;
-
-uniform vec3 faceColors[6];            // UP, DOWN, LEFT, RIGHT, FRONT, BACK
-
-void main()
-{
-    vec3 n   = normalize(vWorldNormal);
-    vec3 col = vec3(0.05);             // default “dark”
-
-    // pick colour based on the *current* outward direction
-    if      (n.y >  0.9) col = faceColors[0]; // UP    (+Y)
-    else if (n.y < -0.9) col = faceColors[1]; // DOWN  (–Y)
-    else if (n.x < -0.9) col = faceColors[2]; // LEFT  (–X)
-    else if (n.x >  0.9) col = faceColors[3]; // RIGHT (+X)
-    else if (n.z >  0.9) col = faceColors[4]; // FRONT (+Z)
-    else if (n.z < -0.9) col = faceColors[5]; // BACK  (–Z)
-
-    FragColor = vec4(col, 1.0);
-})";
+const char* vShader = vertexCode.c_str();
+const char* fShader = fragmentCode.c_str();
 
 // ---------- Cube Geometry ----------
 static const float verts[] = {
@@ -199,14 +159,6 @@ bool CubeGLWidget::intersectsCube(const QVector3D& O, const QVector3D& D)
     return true;
 }
 
-void CubeGLWidget::syncCubeOrientation()
-{
-    QMatrix4x4 model;
-    m_xRot = 30.0f;
-    m_yRot = -45.0f;
-    m_cube.setOrientation(model);
-}
-
 void CubeGLWidget::resetCube() {
     m_cube = RubiksCube();          
     m_xRot = 30.0f;            
@@ -214,22 +166,22 @@ void CubeGLWidget::resetCube() {
     update();
 }
 
-void CubeGLWidget::moveUpLayer() { syncCubeOrientation(); m_cube.U();  update(); }
-void CubeGLWidget::moveUpLayerPrime() { syncCubeOrientation(); m_cube.Up(); update(); }
-void CubeGLWidget::moveUpLayer2() { syncCubeOrientation(); m_cube.U2(); update(); }
-void CubeGLWidget::moveDownLayer() { syncCubeOrientation(); m_cube.D();  update(); }
-void CubeGLWidget::moveDownLayerPrime() { syncCubeOrientation(); m_cube.Dp(); update(); }
-void CubeGLWidget::moveDownLayer2() { syncCubeOrientation(); m_cube.D2(); update(); }
-void CubeGLWidget::moveRightLayer() { syncCubeOrientation(); m_cube.R();  update(); }
-void CubeGLWidget::moveRightLayerPrime() { syncCubeOrientation(); m_cube.Rp(); update(); }
-void CubeGLWidget::moveRightLayer2() { syncCubeOrientation(); m_cube.R2(); update(); }
-void CubeGLWidget::moveLeftLayer() { syncCubeOrientation(); m_cube.L(); update(); }
-void CubeGLWidget::moveLeftLayerPrime() { syncCubeOrientation(); m_cube.Lp(); update(); }
-void CubeGLWidget::moveLeftLayer2() { syncCubeOrientation(); m_cube.L2(); update(); }
-void CubeGLWidget::moveFrontLayer() { syncCubeOrientation(); m_cube.F();  update(); }
-void CubeGLWidget::moveFrontLayerPrime() { syncCubeOrientation(); m_cube.Fp(); update(); }
-void CubeGLWidget::moveFrontLayer2() { syncCubeOrientation(); m_cube.F2(); update(); }
-void CubeGLWidget::moveBackLayer() { syncCubeOrientation(); m_cube.B();  update(); }
-void CubeGLWidget::moveBackLayerPrime() { syncCubeOrientation(); m_cube.Bp(); update(); }
-void CubeGLWidget::moveBackLayer2() { syncCubeOrientation(); m_cube.B2(); update(); }
+void CubeGLWidget::moveUpLayer() { m_cube.U();  update(); }
+void CubeGLWidget::moveUpLayerPrime() { m_cube.Up(); update(); }
+void CubeGLWidget::moveUpLayer2() { m_cube.U2(); update(); }
+void CubeGLWidget::moveDownLayer() { m_cube.D();  update(); }
+void CubeGLWidget::moveDownLayerPrime() { m_cube.Dp(); update(); }
+void CubeGLWidget::moveDownLayer2() { m_cube.D2(); update(); }
+void CubeGLWidget::moveRightLayer() { m_cube.R();  update(); }
+void CubeGLWidget::moveRightLayerPrime() { m_cube.Rp(); update(); }
+void CubeGLWidget::moveRightLayer2() { m_cube.R2(); update(); }
+void CubeGLWidget::moveLeftLayer() { m_cube.L(); update(); }
+void CubeGLWidget::moveLeftLayerPrime() { m_cube.Lp(); update(); }
+void CubeGLWidget::moveLeftLayer2() { m_cube.L2(); update(); }
+void CubeGLWidget::moveFrontLayer() { m_cube.F();  update(); }
+void CubeGLWidget::moveFrontLayerPrime() { m_cube.Fp(); update(); }
+void CubeGLWidget::moveFrontLayer2() { m_cube.F2(); update(); }
+void CubeGLWidget::moveBackLayer() { m_cube.B();  update(); }
+void CubeGLWidget::moveBackLayerPrime() { m_cube.Bp(); update(); }
+void CubeGLWidget::moveBackLayer2() { m_cube.B2(); update(); }
 

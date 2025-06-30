@@ -47,6 +47,12 @@
     <ClCompile Include="RubiksCube.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="PenaltyDialog.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ShaderUtils.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="MainWindow.h">
@@ -61,6 +67,9 @@
     <QtMoc Include="LoginDialog.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="PenaltyDialog.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="PLLCases.h">
@@ -72,5 +81,24 @@
     <ClInclude Include="RubiksCube.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ShaderUtils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <QtRcc Include="Resource.qrc">
+      <Filter>Resource Files</Filter>
+    </QtRcc>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="LoginSS.css">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="cubeFrag.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="cubeVert.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>
